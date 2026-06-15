@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id           Int      @id @default(autoincrement())
+  uuid         String   @unique
+  username     String   @unique
+  realName     String?  
+  nickname     String?   
+  gender       String?
+  birthday     String?
+  phone        String?
+  address      String?
+  email        String   @unique
+  passwordHash String   
+  role         String   @default("user")  
+  createdAt    DateTime @default(now())   
+  updatedAt    DateTime @updatedAt  
+
+  restaurants   Restaurant[]
+  restaurantDrafts  RestaurantDraft[]
+  
+  refreshTokens RefreshToken[]
+  reviews Review[]
+}
+
+model Restaurant {
+  id           Int      @id @default(autoincrement())
+  uuid         String   @unique
+
+  ownerUuid    String   
+  owner        User     @relation(fields: [ownerUuid], references: [uuid], onDelete: Cascade)
+
+  name         String
+  nameEn       String?  
+  category     String
+
+  description  String?
+  phone        String?
+  location     String
+
+  rating       Float?
+  ratingCount  Int      @default(0)   
+  reviewCount  Int      @default(0)   
+  
+  ratingSum    Int      @default(0)   
+
+  createdAt    DateTime @default(now())   
+  updatedAt    DateTime @updatedAt   
+
+  images       RestaurantImage[]
+  reviews      Review[]
+} 
+
+model RestaurantDraft {
+  id             Int      @id @default(autoincrement())
+  uuid           String   @unique
+
+  ownerUuid      String
+  owner          User     @relation(fields: [ownerUuid], references: [uuid], onDelete: Cascade)
+
+  restaurantUuid String  @unique
+
+  name           String
+  nameEn         String?
+  category       String
+
+  description    String?
+  phone          String?
+  location       String
+
+  status         String   @default("PENDING")  // PENDING | REJECTED
+
+  reviewNote     String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  submittedAt    DateTime
+  rejectedAt     DateTime?
+
+  images         RestaurantDraftImage[]
+}
+
+model RestaurantImage {
+  id             Int      @id @default(autoincrement())
+  uuid           String   @unique
+
+  restaurantUuid String?   
+  restaurant     Restaurant?  @relation(fields: [restaurantUuid], references: [uuid], onDelete: Cascade)
+
+  type           String
+  url            String
+  publicId       String
+  sortOrder      Int      @default(0)  
+
+  createdAt      DateTime @default(now())   
+}
+
+model RestaurantDraftImage {
+  id                   Int      @id @default(autoincrement())
+
+  uuid                 String   @unique
+
+  restaurantDraftUuid  String
+
+  restaurantDraft      RestaurantDraft   @relation(fields: [restaurantDraftUuid], references: [uuid], onDelete: Cascade)
+
+  type                 String
+  url                  String
+
+  sourceType           String   @default("DRAFT_UPLOAD")  //  DRAFT_UPLOAD |  PUBLISHED
+
+  publicId             String
+
+  sortOrder            Int      @default(0)
+
+  createdAt            DateTime @default(now())
+}
+
+model Review {
+  id              Int      @id @default(autoincrement())
+  uuid            String   @unique
+
+  restaurantUuid  String  
+  restaurant      Restaurant @relation(fields: [restaurantUuid], references: [uuid], onDelete: Cascade)
+
+  userUuid        String  
+  user            User     @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
+
+  rating          Int
+  content         String?
+
+  createdAt       DateTime @default(now())   
+  updatedAt       DateTime @updatedAt   
+
+  images          ReviewImage[]
+  reply           ReviewReply? @relation("ReviewToReply")
+
+  @@unique([restaurantUuid, userUuid])
+}
+
+model ReviewImage {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @unique
+
+  reviewUuid  String  
+  review      Review   @relation(fields: [reviewUuid], references: [uuid], onDelete: Cascade)
+
+  url         String?
+  publicId    String?
+
+  createdAt   DateTime @default(now())    
+}
+
+model ReviewReply {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique
+  reviewUuid String  @unique  
+  content   String
+  createdAt DateTime @default(now())   
+  updatedAt DateTime @updatedAt   
+
+  review Review @relation("ReviewToReply", fields: [reviewUuid], references: [uuid], onDelete: Cascade)
+}
+
+model RefreshToken {
+  id        String   @id
+  userUuid  String  
+  expiresAt Int     
+  revokedAt Int?    
+
+  user User @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
+}

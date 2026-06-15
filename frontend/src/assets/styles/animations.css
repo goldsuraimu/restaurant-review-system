@@ -1,0 +1,37 @@
+/* ===== skeleton variables ===== */
+:root {
+  --skeleton-base: #eee;
+  --skeleton-highlight: rgba(255, 255, 255, 0.6);
+  --skeleton-radius: 8px;
+  --skeleton-speed: 1.2s;
+}
+
+/* ===== shimmer animation ===== */
+@keyframes shimmer-x {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ===== skeleton base ===== */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--skeleton-base);
+  border-radius: var(--skeleton-radius);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+      transparent,
+      var(--skeleton-highlight),
+      transparent);
+  animation: shimmer-x var(--skeleton-speed) infinite;
+}
