@@ -105,11 +105,6 @@ const router = createRouter({
           component: () => import('@/views/owner/OwnerDashboardView.vue'),
         },
         {
-          path: 'restaurants/rating',
-          name: 'OwnerRestaurantRatingList',
-          component: () => import('@/views/owner/OwnerRestaurantRatingList.vue'),
-        },
-        {
           path: 'reviews',
           name: 'OwnerAllReviews',
           component: () => import('@/views/owner/OwnerAllReviewsView.vue'),
@@ -118,6 +113,11 @@ const router = createRouter({
           path: 'restaurants',
           name: 'OwnerRestaurants',
           component: () => import('@/views/owner/OwnerRestaurantsView.vue'),
+        },
+        {
+          path: 'restaurants/rating',
+          name: 'OwnerRestaurantRatingList',
+          component: () => import('@/views/owner/OwnerRestaurantRatingList.vue'),
         },
         {
           path: 'restaurants/:uuid/reviews',

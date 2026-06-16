@@ -127,24 +127,24 @@ export async function findOwnerRestaurantRankings(
   >`
     WITH ranked AS (
       SELECT
-        r.uuid as restaurantUuid,
-        r.name as restaurantName,
-        r.rating as avgRating,
-        r.reviewCount as reviewCount,
+        r.uuid as "restaurantUuid",
+        r.name as "restaurantName",
+        r.rating as "avgRating",
+        r."reviewCount" as "reviewCount",
         (
-          (r.reviewCount * 1.0 / (r.reviewCount + ${m})) * r.rating +
-          (${m} * 1.0 / (r.reviewCount + ${m})) * ${C}
+          (r."reviewCount" * 1.0 / (r."reviewCount" + ${m})) * r.rating +
+          (${m} * 1.0 / (r."reviewCount" + ${m})) * ${C}
         ) as score
-      FROM Restaurant r
-      WHERE r.ownerUuid = ${ownerUuid}
+      FROM "Restaurant" r
+      WHERE r."ownerUuid" = ${ownerUuid}
         AND r.rating IS NOT NULL
-        AND r.reviewCount > 0
+        AND r."reviewCount" > 0
     )
     SELECT
-      restaurantUuid,
-      restaurantName,
-      avgRating,
-      reviewCount,
+      "restaurantUuid",
+      "restaurantName",
+      "avgRating",
+      "reviewCount",
       ROW_NUMBER() OVER (ORDER BY score DESC) as rank
     FROM ranked
     ORDER BY score DESC

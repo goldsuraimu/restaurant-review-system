@@ -83,6 +83,7 @@ export async function becomeOwner(
         req.auth.uuid
       )
 
+    const isProduction = process.env.NODE_ENV === 'production';
     // Vercel(frontend) + Render(backend) 為跨站部署，
     // SameSite=None 才能讓瀏覽器攜帶 Cookie。
     // 若前後端共用主網域（如 app.example.com / api.example.com），
@@ -93,8 +94,8 @@ export async function becomeOwner(
         result.accessToken,
         {
           httpOnly: true,
-          sameSite: 'none',
-          secure: process.env.NODE_ENV === 'production',
+          sameSite: isProduction ? 'none' : 'lax',
+          secure: isProduction,
           maxAge: 15 * 60 * 1000, // 15分鐘
         }
       )

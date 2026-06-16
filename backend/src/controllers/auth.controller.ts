@@ -28,6 +28,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
       password
     );
 
+    const isProduction = process.env.NODE_ENV === 'production';
     // Vercel(frontend) + Render(backend) 為跨站部署，
     // SameSite=None 才能讓瀏覽器攜帶 Cookie。
     // 若前後端共用主網域（如 app.example.com / api.example.com），
@@ -36,14 +37,14 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     res
       .cookie('access_token', accessToken, {
         httpOnly: true,
-        sameSite: 'none', 
-        secure: process.env.NODE_ENV === 'production',
+        sameSite: isProduction ? 'none' : 'lax', 
+        secure: isProduction,
         maxAge: 15 * 60 * 1000, // 15 分鐘
       })
       .cookie('refresh_token', refreshToken, {
         httpOnly: true,
-        sameSite: 'none',
-        secure: process.env.NODE_ENV === 'production',
+        sameSite: isProduction ? 'none' : 'strict',
+        secure: isProduction,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 天
       })
       .status(200)
@@ -60,6 +61,7 @@ export async function refresh(req: Request, res: Response, next: NextFunction) {
     const token = req.cookies['refresh_token'];
     const { accessToken, refreshToken } = await refreshUserToken(token);
 
+    const isProduction = process.env.NODE_ENV === 'production';
     // Vercel(frontend) + Render(backend) 為跨站部署，
     // SameSite=None 才能讓瀏覽器攜帶 Cookie。
     // 若前後端共用主網域（如 app.example.com / api.example.com），
@@ -68,14 +70,14 @@ export async function refresh(req: Request, res: Response, next: NextFunction) {
     res
       .cookie('access_token', accessToken, {
         httpOnly: true,
-        sameSite: 'none',
-        secure: process.env.NODE_ENV === 'production',
+        sameSite: isProduction ? 'none' : 'lax',
+        secure: isProduction,
         maxAge: 15 * 60 * 1000, // 15 分鐘
       })
       .cookie('refresh_token', refreshToken, {
         httpOnly: true,
-        sameSite: 'none',
-        secure: process.env.NODE_ENV === 'production',
+        sameSite: isProduction ? 'none' : 'strict',
+        secure: isProduction,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 天
       })
       .sendStatus(204);

@@ -101,7 +101,7 @@ export async function getReviewTrend(
   const rows = await client.$queryRaw<{ day_index: number; count: number }[]>`
     SELECT
       CAST((EXTRACT(EPOCH FROM r."createdAt") - ${sinceSec}) / 86400 AS INTEGER) as day_index,
-      COUNT(*) as count
+      COUNT(*) as "count"
     FROM "Review" r
     JOIN "Restaurant" res ON r."restaurantUuid" = res."uuid"
     WHERE res."ownerUuid" = ${ownerUuid}
@@ -147,10 +147,10 @@ export async function findTopOwnerRestaurantsByBayesian(
     }[]
   >`
     SELECT
-      r."uuid" as restaurantUuid,
-      r."name" as restaurantName,
-      r."rating" as avgRating,
-      r."reviewCount" as reviewCount
+      r."uuid" as "restaurantUuid",
+      r."name" as "restaurantName",
+      r."rating" as "avgRating",
+      r."reviewCount" as "reviewCount"
     FROM "Restaurant" r
     WHERE r."ownerUuid" = ${ownerUuid}
       AND r."rating" IS NOT NULL
