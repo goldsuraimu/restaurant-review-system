@@ -83,13 +83,17 @@ export async function becomeOwner(
         req.auth.uuid
       )
 
+    // Vercel(frontend) + Render(backend) 為跨站部署，
+    // SameSite=None 才能讓瀏覽器攜帶 Cookie。
+    // 若前後端共用主網域（如 app.example.com / api.example.com），
+    // 建議改回 sameSite: 'lax' 以提升 CSRF 防護。
     res
       .cookie(
         'access_token',
         result.accessToken,
         {
           httpOnly: true,
-          sameSite: 'lax',
+          sameSite: 'none',
           secure: process.env.NODE_ENV === 'production',
           maxAge: 15 * 60 * 1000, // 15分鐘
         }

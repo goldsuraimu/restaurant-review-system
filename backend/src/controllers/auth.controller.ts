@@ -28,16 +28,21 @@ export async function login(req: Request, res: Response, next: NextFunction) {
       password
     );
 
+    // Vercel(frontend) + Render(backend) 為跨站部署，
+    // SameSite=None 才能讓瀏覽器攜帶 Cookie。
+    // 若前後端共用主網域（如 app.example.com / api.example.com），
+    // 建議改回 access_token的sameSite: 'lax' 和 refresh_token的sameSite: 'strict' ， 
+    // 以提升 CSRF 防護。
     res
       .cookie('access_token', accessToken, {
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none', 
         secure: process.env.NODE_ENV === 'production',
         maxAge: 15 * 60 * 1000, // 15 分鐘
       })
       .cookie('refresh_token', refreshToken, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: 'none',
         secure: process.env.NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 天
       })
@@ -55,16 +60,21 @@ export async function refresh(req: Request, res: Response, next: NextFunction) {
     const token = req.cookies['refresh_token'];
     const { accessToken, refreshToken } = await refreshUserToken(token);
 
+    // Vercel(frontend) + Render(backend) 為跨站部署，
+    // SameSite=None 才能讓瀏覽器攜帶 Cookie。
+    // 若前後端共用主網域（如 app.example.com / api.example.com），
+    // 建議改回 access_token的sameSite: 'lax' 和 refresh_token的sameSite: 'strict' ， 
+    // 以提升 CSRF 防護。
     res
       .cookie('access_token', accessToken, {
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none',
         secure: process.env.NODE_ENV === 'production',
         maxAge: 15 * 60 * 1000, // 15 分鐘
       })
       .cookie('refresh_token', refreshToken, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: 'none',
         secure: process.env.NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 天
       })

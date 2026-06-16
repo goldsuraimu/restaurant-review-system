@@ -1,4 +1,5 @@
 import { prisma } from '#/db/prisma'
+import type { Prisma } from '@prisma/client'
 
 import type { DBClient } from '#/types/database'
 
@@ -44,16 +45,20 @@ export async function findSimpleList({
 
   const total = await client.restaurant.count({ where })
 
+  const orderBy: Prisma.RestaurantOrderByWithRelationInput[] = [
+    sortColumn === 'rating'
+      ? { rating: { sort: sortOrder, nulls: 'last' } }
+      : { [sortColumn]: sortOrder }
+  ]
+
+  if (sortColumn !== 'rating') orderBy.push({ rating: 'desc' })
+  if (sortColumn !== 'reviewCount') orderBy.push({ reviewCount: 'desc' })
+
   const rows = await client.restaurant.findMany({
     where,
     skip,
     take: limit,
-    orderBy: [
-      { [sortColumn]: sortOrder },
-      
-      { rating: 'desc' },
-      { reviewCount: 'desc' },
-    ],
+    orderBy,
     include: {
       images: {
         where: { type: 'cover' },
