@@ -1,5 +1,4 @@
 import { ApiError } from '#/utils/api-error'
-import { resolveImageUrl } from '#/utils/resolve-image-url'
 import { formatNumber } from '#/utils/number'
 
 import type { Prisma } from '@prisma/client'
@@ -27,7 +26,7 @@ type RestaurantDraftWithImages =
 
 type ImageGroup = {
   uuid: string
-  url: string
+  publicId: string
   sortOrder: number
 }
 
@@ -113,10 +112,7 @@ export function toOwnerRestaurantListItem(
         ? {
           uuid: cover.uuid,
 
-          url:
-            resolveImageUrl(
-              cover.url
-            ),
+          publicId: cover.publicId,
 
           sortOrder:
             cover.sortOrder,
@@ -171,7 +167,7 @@ export function toRestaurantDraftDetail(row: RestaurantDraftWithImages) {
   row.images.forEach(img => {
     imagesByType[img.type as 'cover' | 'gallery' | 'menu'].push({
       uuid: img.uuid,
-      url: img.url,
+      publicId: img.publicId,
       sortOrder: img.sortOrder,
     })
   })
@@ -191,27 +187,5 @@ export function toRestaurantDraftDetail(row: RestaurantDraftWithImages) {
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? null,
     rejectedAt: row.rejectedAt?.toISOString() ?? null,
-  }
-}
-
-
-// 將餐廳草稿詳細資料格式化為 API 回應格式（包含圖片 URL 解析）
-export function formatRestaurantDraftForClient(restaurant: ReturnType<typeof toRestaurantDraftDetail>) {
-  return {
-    ...restaurant,
-    images: {
-      cover: restaurant.images.cover.map(img => ({
-        ...img,
-        url: resolveImageUrl(img.url),
-      })),
-      gallery: restaurant.images.gallery.map(img => ({
-        ...img,
-        url: resolveImageUrl(img.url),
-      })),
-      menu: restaurant.images.menu.map(img => ({
-        ...img,
-        url: resolveImageUrl(img.url),
-      })),
-    },
   }
 }

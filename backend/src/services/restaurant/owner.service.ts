@@ -15,7 +15,6 @@ import * as OwnerRestaurantRepo from '#/repositories/restaurant/owner-restaurant
 import * as restaurantDraftRepo from '#/repositories/restaurant/restaurant-draft.repo'
 import * as restaurantDraftImageRepo from '#/repositories/restaurant/restaurant-draft-image.repo'
 import {
-  formatRestaurantForClient,
   toRestaurantDetail,
   formatOwnerRestaurantRanking,
 } from './restaurant.mapper'
@@ -23,7 +22,6 @@ import {
 import {
   toOwnerRestaurantListItem,
   toRestaurantDraftDetail,
-  formatRestaurantDraftForClient
 } from './owner-restaurant.mapper'
 
 import type { CreateRestaurantDto, UpdateRestaurantDto } from '#/types/dto'
@@ -478,9 +476,7 @@ export async function getOwnerRestaurantDetail({
         })
       }
 
-      return formatRestaurantDraftForClient(
-        toRestaurantDraftDetail(draft)
-      )
+      return toRestaurantDraftDetail(draft)
     }
 
     // 如果草稿不存在，則查正式餐廳
@@ -503,9 +499,7 @@ export async function getOwnerRestaurantDetail({
       })
     }
 
-    return formatRestaurantForClient(
-      toRestaurantDetail(restaurant)
-    )
+    return toRestaurantDetail(restaurant)
   } catch (err) {
     handleServiceError(err, '取得餐廳詳情失敗')
   }

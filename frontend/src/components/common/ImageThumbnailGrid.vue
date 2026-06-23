@@ -2,7 +2,11 @@
   <div class="d-flex gap-2 flex-wrap mb-2" v-if="props.images?.length">
     <div class="thumbnail-wrapper" v-for="(img, i) in images" :key="img.uuid">
       <img 
-        :src="img.url" 
+        :src="
+          img.publicId 
+            ? getThumbnailUrl(img.publicId)
+            : img.url || ''
+        " 
         class="thumbnail"
         :class="{ clickable: props.clickable }"
         @click="props.clickable && emit('open', i)" 
@@ -12,6 +16,8 @@
 </template>
 
 <script setup lang="ts">
+import { getThumbnailUrl } from '@/utils/cloudinary';
+
 import type { BaseImage } from '@/types';
 
 const props = withDefaults(defineProps<{

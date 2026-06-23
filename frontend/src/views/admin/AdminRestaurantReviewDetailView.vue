@@ -99,12 +99,12 @@ const previewRestaurant = computed(() => {
   const displayGallery = [
     ...currentRestaurant.value.images.cover.map((img, i) => ({
       uuid: img.uuid,
-      url: img.url,
-      sortOrder: 0,
+      publicId: img.publicId,
+      sortOrder: i + 1,
     })),
     ...currentRestaurant.value.images.gallery.map((img, i) => ({
       uuid: img.uuid,
-      url: img.url,
+      publicId: img.publicId,
       sortOrder: i + 1,
     })),
   ]
@@ -120,7 +120,7 @@ const previewRestaurant = computed(() => {
     galleryImages: displayGallery,
     menuImages: currentRestaurant.value.images.menu.map((img, i) => ({
       uuid: img.uuid,
-      url: img.url,
+      publicId: img.publicId,
       sortOrder: i
     })),
   }

@@ -9,7 +9,6 @@ import {
   toRestaurantListItemFromRaw,
   toPublicRestaurantListItemFromPrisma,
   toRestaurantDetail,
-  formatRestaurantForClient,
 } from './restaurant.mapper'
 
 import type {
@@ -91,7 +90,7 @@ export async function getRestaurantByUuid(restaurantUuid: string) {
       })
     }
 
-    return formatRestaurantForClient(toRestaurantDetail(restaurant))
+    return toRestaurantDetail(restaurant)
   } catch (err) {
     handleServiceError(err, '取得餐廳失敗')
   }

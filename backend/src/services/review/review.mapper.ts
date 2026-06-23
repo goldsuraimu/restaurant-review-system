@@ -1,5 +1,4 @@
 import { Prisma } from '@prisma/client'
-import { resolveImageUrl } from '#/utils/resolve-image-url'
 
 type ReviewWithRelations = Prisma.ReviewGetPayload<{
   include: {
@@ -33,7 +32,7 @@ export function toReviewItem(r: ReviewWithRelations) {
       uuid: img.uuid,
       reviewUuid: img.reviewUuid,
       createdAt: img.createdAt,
-      url: resolveImageUrl(img.url),
+      publicId: img.publicId,
     })),
 
     createdAt: r.createdAt.toISOString(),

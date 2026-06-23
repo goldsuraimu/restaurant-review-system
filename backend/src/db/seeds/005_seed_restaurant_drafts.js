@@ -1,6 +1,11 @@
-// src/db/seeds/005_seed_restaurant_drafts.js
-
 const { v4: uuidv4 } = require('uuid')
+
+const CLOUD_NAME =
+  process.env.CLOUDINARY_CLOUD_NAME
+
+function cloudinaryUrl(publicId) {
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${publicId}`
+}
 
 function daysAgo(days) {
   const d = new Date()
@@ -14,35 +19,83 @@ function randomInt(min, max) {
   ) + min
 }
 
-function randomImage(seed) {
-  return `https://picsum.photos/seed/${seed}/1200/800`
+function getCoverImage(slug) {
+  return `restaurants/${slug}/cover`
 }
 
-function buildDraftImages(seedPrefix) {
+function getRandomUniqueImages(
+  folder,
+  maxImageNumber,
+  count
+) {
+  const numbers = Array.from(
+    { length: maxImageNumber },
+    (_, i) => i + 1
+  )
+
+  const shuffled = numbers.sort(
+    () => Math.random() - 0.5
+  )
+
+  return shuffled
+    .slice(0, count)
+    .map((num) =>
+      `restaurants/gallery/${folder}-${num}`
+    )
+}
+
+function getRandomMenus(count) {
+  const numbers = Array.from(
+    { length: 25 },
+    (_, i) => i + 1
+  )
+
+  const shuffled = numbers.sort(
+    () => Math.random() - 0.5
+  )
+
+  return shuffled
+    .slice(0, count)
+    .map((num) =>
+      `menu-${num}`
+    )
+}
+
+
+function buildRandomImages() {
+
+  const interiorCount = randomInt(1, 3)
+
+  const foodCount = randomInt(1, 4)
+
+  const drinkCount = randomInt(1, 3)
+
+  const menuCount = randomInt(1, 10)
+
   return {
-    cover: [
-      randomImage(`${seedPrefix}-cover`)
-    ],
+    cover: getCoverImage('cover'),
 
-    gallery: Array.from(
-      {
-        length: randomInt(0, 6),
-      },
-      (_, i) =>
-        randomImage(
-          `${seedPrefix}-gallery-${i}`
-        )
-    ),
+    gallery: [
+      ...getRandomUniqueImages(
+        "interior",
+        12,
+        interiorCount
+      ),
 
-    menu: Array.from(
-      {
-        length: randomInt(1, 6),
-      },
-      (_, i) =>
-        randomImage(
-          `${seedPrefix}-menu-${i}`
-        )
-    ),
+      ...getRandomUniqueImages(
+        "food",
+        23,
+        foodCount
+      ),
+
+      ...getRandomUniqueImages(
+        "drink",
+        16,
+        drinkCount
+      ),
+    ].sort(() => Math.random() - 0.5),
+
+    menu: getRandomMenus(menuCount),
   }
 }
 
@@ -53,26 +106,23 @@ async function createDraftImages(
   sourceType = 'DRAFT_UPLOAD'
 ) {
   // cover
-  for (let i = 0; i < images.cover.length; i++) {
-    await prisma.restaurantDraftImage.create({
-      data: {
-        uuid: uuidv4(),
+  await prisma.restaurantDraftImage.create({
+    data: {
+      uuid: uuidv4(),
 
-        restaurantDraftUuid,
+      restaurantDraftUuid,
 
-        type: 'cover',
+      type: 'cover',
 
-        url: images.cover[i],
+      url: cloudinaryUrl(images.cover),
 
-        sourceType,
+      sourceType,
 
-        publicId:
-          `restaurants-drafts/${restaurantDraftUuid}/cover/${i}`,
+      publicId: images.cover,
 
-        sortOrder: i,
-      },
-    })
-  }
+      sortOrder: 0,
+    },
+  })
 
   // gallery
   for (let i = 0; i < images.gallery.length; i++) {
@@ -84,12 +134,12 @@ async function createDraftImages(
 
         type: 'gallery',
 
-        url: images.gallery[i],
+        url: cloudinaryUrl(images.gallery[i]),
 
         sourceType,
 
         publicId:
-          `restaurants-drafts/${restaurantDraftUuid}/gallery/${i}`,
+          images.gallery[i],
 
         sortOrder: i,
       },
@@ -106,12 +156,12 @@ async function createDraftImages(
 
         type: 'menu',
 
-        url: images.menu[i],
+        url: cloudinaryUrl(images.menu[i]),
 
         sourceType,
 
         publicId:
-          `restaurants-drafts/${restaurantDraftUuid}/menu/${i}`,
+          images.menu[i],
 
         sortOrder: i,
       },
@@ -180,7 +230,7 @@ module.exports = async function (prisma) {
   await createDraftImages(
     prisma,
     ramenDraft.uuid,
-    buildDraftImages('ramen-draft')
+    buildRandomImages('menya')
   )
 
   // =========================================================
@@ -229,7 +279,7 @@ module.exports = async function (prisma) {
   await createDraftImages(
     prisma,
     sushiDraft.uuid,
-    buildDraftImages('sushi-draft')
+    buildRandomImages('sushi-kawa')
   )
 
   // =========================================================
@@ -279,7 +329,7 @@ module.exports = async function (prisma) {
   await createDraftImages(
     prisma,
     breakfastDraft.uuid,
-    buildDraftImages('breakfast-draft')
+    buildRandomImages('morning-house')
   )
 
   // =========================================================
@@ -336,8 +386,8 @@ module.exports = async function (prisma) {
           .filter(
             (i) => i.type === 'cover'
           )
-          .map((i) => i.url)
-          .slice(0, 1),
+          .map((i) => i.publicId)
+          .slice(0, 1)[0],
 
       gallery:
         published1.images
@@ -345,14 +395,14 @@ module.exports = async function (prisma) {
             (i) =>
               i.type === 'gallery'
           )
-          .map((i) => i.url),
+          .map((i) => i.publicId),
 
       menu:
         published1.images
           .filter(
             (i) => i.type === 'menu'
           )
-          .map((i) => i.url),
+          .map((i) => i.publicId),
     },
     'PUBLISHED'
   )
@@ -410,7 +460,31 @@ module.exports = async function (prisma) {
   await createDraftImages(
     prisma,
     updateDraft2.uuid,
-    buildDraftImages('update-draft-2')
+    {
+      cover:
+        published2.images
+          .filter(
+            (i) => i.type === 'cover'
+          )
+          .map((i) => i.publicId)
+          .slice(0, 1)[0],
+
+      gallery:
+        published2.images
+          .filter(
+            (i) =>
+              i.type === 'gallery'
+          )
+          .map((i) => i.publicId),
+
+      menu:
+        published2.images
+          .filter(
+            (i) => i.type === 'menu'
+          )
+          .map((i) => i.publicId),
+    },
+    'PUBLISHED'
   )
 
   // =========================================================
@@ -466,7 +540,31 @@ module.exports = async function (prisma) {
   await createDraftImages(
     prisma,
     updateDraft3.uuid,
-    buildDraftImages('update-draft-3')
+    {
+      cover:
+        published3.images
+          .filter(
+            (i) => i.type === 'cover'
+          )
+          .map((i) => i.publicId)
+          .slice(0, 1)[0],
+
+      gallery:
+        published3.images
+          .filter(
+            (i) =>
+              i.type === 'gallery'
+          )
+          .map((i) => i.publicId),
+
+      menu:
+        published3.images
+          .filter(
+            (i) => i.type === 'menu'
+          )
+          .map((i) => i.publicId),
+    },
+    'PUBLISHED'
   )
 
   console.log(

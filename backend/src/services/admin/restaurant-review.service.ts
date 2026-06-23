@@ -9,7 +9,6 @@ import { diffRemovedPublishedImages } from '#/services/admin/restaurant-review.h
 import * as restaurantRepo from '#/repositories/restaurant/restaurant.repo'
 
 import {
-  formatRestaurantDraftForClient,
   toRestaurantDraftDetail
 } from '../restaurant/owner-restaurant.mapper'
 
@@ -316,9 +315,7 @@ export async function getRestaurantDetail(uuid: string) {
     }
 
 
-    return formatRestaurantDraftForClient(
-      toRestaurantDraftDetail(restaurantDraft)
-    )
+    return toRestaurantDraftDetail(restaurantDraft)
 
   } catch (err) {
     handleServiceError(err, '取得餐廳詳細資料失敗')

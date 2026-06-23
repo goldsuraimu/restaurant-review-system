@@ -2,7 +2,7 @@
   <div class="col">
     <RouterLink :to="{ name: 'RestaurantDetail', params: { uuid: restaurant.uuid } }" class="text-secondary">
       <div class="card mb-3">
-        <img class="card-img-top" :src="restaurant.coverImage?.url || '/placeholder.jpg'" :alt="restaurant.name" />
+        <img class="card-img-top" :src="restaurant?.coverImage?.publicId ? getCoverUrl(restaurant.coverImage.publicId) : '' " :alt="restaurant.name" />
         <div class="card-body p-3">
           <h6 class="card-title mb-1">{{ restaurant.name }}</h6>
 
@@ -27,9 +27,11 @@
 </template>
 
 <script setup lang="ts">
+import { getCoverUrl } from '@/utils/cloudinary';
+
 import type { RestaurantPublicListItem } from '@/types/restaurant/restaurant.types'
 
-defineProps<{
+const props = defineProps<{
   restaurant: RestaurantPublicListItem
 }>()
 

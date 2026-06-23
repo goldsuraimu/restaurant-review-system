@@ -62,6 +62,7 @@ module.exports = async function (prisma) {
       },
     })
   }
-
+  await prisma.$executeRaw`UPDATE "Review" SET "updatedAt" = "createdAt"`;
+  await prisma.$executeRaw`UPDATE "ReviewReply" SET "updatedAt" = "createdAt"`;
   console.log('✅ Replies seeded (KPI ready)')
 }

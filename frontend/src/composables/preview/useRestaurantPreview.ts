@@ -16,12 +16,14 @@ export function useRestaurantPreview(
     const displayGallery = [
       ...coverImages.map((img, i) => ({
         uuid: img.type === 'existing' ? img.uuid : `cover-${i}`,
-        url: img.type === 'existing' ? img.url : img.previewUrl,
+        publicId: img.type === 'existing' ? img.publicId : undefined,
+        url: img.type === 'existing' ? undefined : img.previewUrl,
         sortOrder: 0,
       })),
       ...galleryImages.map((img, i) => ({
         uuid: img.type === 'existing' ? img.uuid : `gallery-${i}`,
-        url: img.type === 'existing' ? img.url : img.previewUrl,
+        publicId: img.type === 'existing' ? img.publicId : undefined,
+        url: img.type === 'existing' ? undefined : img.previewUrl,
         sortOrder: i + 1,
       })),
     ]
@@ -37,7 +39,8 @@ export function useRestaurantPreview(
       galleryImages: displayGallery,
       menuImages: menuImages.map((img, i) => ({
         uuid: img.type === 'existing' ? img.uuid : `menu-${i}`,
-        url: img.type === 'existing' ? img.url : img.previewUrl,
+        publicId: img.type === 'existing' ? img.publicId : undefined,
+        url: img.type === 'existing' ? undefined : img.previewUrl,
         sortOrder: i
       })),
     }

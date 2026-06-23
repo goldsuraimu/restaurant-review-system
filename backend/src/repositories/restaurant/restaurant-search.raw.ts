@@ -20,7 +20,7 @@ export interface RestaurantWithScoreRow {
   createdAt: Date;
   updatedAt: Date | null;
   coverUuid: string | null;
-  coverUrl: string | null;
+  coverPublicId: string | null;
   coverSortOrder: number | null;
   score: number;
 }
@@ -97,7 +97,7 @@ export async function findRestaurantListWithRelevance(
       r."uuid", r."name", r."nameEn", r."category", r."rating", r."ratingCount", r."reviewCount", r."createdAt",
       r."score",
       img."uuid" AS "coverUuid",
-      img."url" AS "coverUrl",
+      img."publicId" AS "coverPublicId",
       img."sortOrder" AS "coverSortOrder"
     FROM ranked_restaurants r
     LEFT JOIN "RestaurantImage" img

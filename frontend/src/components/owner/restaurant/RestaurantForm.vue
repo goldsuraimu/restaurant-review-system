@@ -83,7 +83,7 @@
               <div v-for="(img, index) in coverImages" :key="img.type === 'new'
                 ? img.file.name + img.file.lastModified
                 : img.uuid" class="preview-wrapper">
-                <img :src="img.type === 'new' ? img.previewUrl : img.url" class="preview" />
+                <img :src="img.type === 'new' ? img.previewUrl : getThumbnailUrl(img.publicId)" class="preview" />
 
                 <!-- 進度條顯示 -->
                 <div v-if="img.type === 'new' && progressMap?.[props.getFileKey(img.file)] !== undefined"
@@ -123,7 +123,7 @@
               <div v-for="(img, index) in galleryImages" :key="img.type === 'new'
                 ? img.file.name + img.file.lastModified
                 : img.uuid" class="preview-wrapper">
-                <img :src="img.type === 'new' ? img.previewUrl : img.url" class="preview" />
+                <img :src="img.type === 'new' ? img.previewUrl : getThumbnailUrl(img.publicId)" class="preview" />
 
                 <!-- 進度條顯示 -->
                 <div v-if="img.type === 'new' && progressMap?.[props.getFileKey(img.file)] !== undefined"
@@ -165,7 +165,7 @@
               <div v-for="(img, index) in menuImages" :key="img.type === 'new'
                 ? img.file.name + img.file.lastModified
                 : img.uuid" class="preview-wrapper">
-                <img :src="img.type === 'new' ? img.previewUrl : img.url" class="preview" />
+                <img :src="img.type === 'new' ? img.previewUrl : getThumbnailUrl(img.publicId)" class="preview" />
 
                 <!-- 進度條顯示 -->
                 <div v-if="img.type === 'new' && progressMap?.[props.getFileKey(img.file)] !== undefined"
@@ -249,6 +249,8 @@ import { useFormContext } from '@/composables/form/core/useFieldErrors'
 import { useBindFields } from '@/composables/form/core/useBindField'
 import { useRestaurantPreview } from '@/composables/preview/useRestaurantPreview'
 import { useImageUpload } from '@/composables/upload/useImageUpload'
+
+import { getThumbnailUrl } from '@/utils/cloudinary';
 
 import RestaurantPreview from './RestaurantPreview.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';

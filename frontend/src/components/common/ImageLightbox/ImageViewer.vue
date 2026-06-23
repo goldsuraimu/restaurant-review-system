@@ -16,7 +16,11 @@
     <div class="main-image" @click="handleImageClick" style="touch-action: none;">
       <img 
         v-if="currentImage" 
-        :src="currentImage.url" 
+        :src="
+          currentImage.publicId
+            ? getViewerUrl(currentImage.publicId)
+            : currentImage.url || ''
+        " 
         class="displayed-image" 
         :class="{ zoomed: isZoomed }"
         :style="transformStyle" 
@@ -36,9 +40,21 @@
 
     <!-- thumbnails -->
     <div class="thumbnail-container">
-      <img v-for="img in images" :key="img.uuid" :src="img.url" class="thumbnail" :class="{
-        active: currentImage?.uuid === img.uuid
-      }" @click="setImage(images.findIndex(i => i.uuid === img.uuid))" />
+      <img 
+        v-for="img in images" 
+        :key="img.uuid" 
+        :src="
+          img.publicId 
+            ? getThumbnailUrl(img.publicId)
+            : img.url || ''
+        " 
+        loading="lazy"  
+        class="thumbnail" 
+        :class="{
+          active: currentImage?.uuid === img.uuid
+        }" 
+        @click="setImage(images.findIndex(i => i.uuid === img.uuid))" 
+      />
     </div>
   </div>
 </template>
@@ -47,6 +63,7 @@
 import { computed } from 'vue'
 
 import { useImageLightbox } from '@/composables/ui/useImageLightbox'
+import { getThumbnailUrl, getViewerUrl } from '@/utils/cloudinary'
 
 import type { BaseImage } from '@/types'
 

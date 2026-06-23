@@ -15,7 +15,7 @@ export function useImageUpload(
     initialImages.map(img => ({
       type: 'existing',
       uuid: img.uuid,
-      url: img.url
+      publicId: img.publicId!
     }))
   )
 
@@ -59,7 +59,7 @@ export function useImageUpload(
     images.value = newImages.map(img => ({
       type: 'existing',
       uuid: img.uuid,
-      url: img.url
+      publicId: img.publicId!
     }))
 
     deletedImageUuids.value = []

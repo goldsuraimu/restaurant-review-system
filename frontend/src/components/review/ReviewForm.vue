@@ -46,7 +46,7 @@
         class="image-container"
       >
         <img 
-          :src="img.type === 'new' ? img.previewUrl : img.url"
+          :src="img.type === 'new' ? img.previewUrl : getThumbnailUrl(img.publicId)"
           class="image-thumbnail" 
         />
         <span class="image-name">
@@ -109,6 +109,7 @@ import { useImageUpload } from '@/composables/upload/useImageUpload'
 import { useFormContext } from '@/composables/form/core/useFieldErrors'
 import { useBindFields } from '@/composables/form/core/useBindField'
 
+import { getThumbnailUrl } from '@/utils/cloudinary'
 
 import type {
   RestaurantReview,

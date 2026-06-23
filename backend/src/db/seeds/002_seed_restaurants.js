@@ -3,6 +3,12 @@ const {
   restaurants,
 } = require('./data/restaurants')
 
+const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME
+
+function cloudinaryUrl(publicId) {
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${publicId}`
+}
+
 module.exports = async function seedRestaurants(prisma) {
   
   await prisma.restaurantDraftImage.deleteMany()
@@ -84,22 +90,17 @@ async function createRestaurantImages(
     await prisma.restaurantImage.create({
       data: {
 
-        uuid:
-          uuidv4(),
+        uuid: uuidv4(),
 
         restaurantUuid,
 
-        type:
-          'cover',
+        type: 'cover',
 
-        url:
-          images.cover,
+        url: cloudinaryUrl(images.cover),
 
-        publicId:
-          `restaurants-images/${restaurantUuid}/cover`,
+        publicId: images.cover,
 
-        sortOrder:
-          0,
+        sortOrder: 0,
       },
     })
   }
@@ -117,22 +118,17 @@ async function createRestaurantImages(
     await prisma.restaurantImage.create({
       data: {
 
-        uuid:
-          uuidv4(),
+        uuid: uuidv4(),
 
         restaurantUuid,
 
-        type:
-          'gallery',
+        type: 'gallery',
 
-        url:
-          images.gallery[i],
+        url: cloudinaryUrl(images.gallery[i]),
 
-        publicId:
-          `restaurants-images/${restaurantUuid}/gallery-${i}`,
+        publicId: images.gallery[i],
 
-        sortOrder:
-          i + 1,
+        sortOrder: i + 1,
       },
     })
   }
@@ -150,22 +146,18 @@ async function createRestaurantImages(
     await prisma.restaurantImage.create({
       data: {
 
-        uuid:
-          uuidv4(),
+        uuid: uuidv4(),
 
         restaurantUuid,
 
-        type:
-          'menu',
+        type: 'menu',
 
         url:
-          images.menu[i],
+          cloudinaryUrl(images.menu[i]),
 
-        publicId:
-          `restaurants-images/${restaurantUuid}/menu-${i}`,
+        publicId: images.menu[i],
 
-        sortOrder:
-          i + 1,
+        sortOrder: i + 1,
       },
     })
   }

@@ -1,4 +1,3 @@
-import { resolveImageUrl } from '#/utils/resolve-image-url'
 import { formatNumber } from '#/utils/number'
 
 import type { Prisma } from '@prisma/client'
@@ -10,7 +9,7 @@ type RestaurantWithImages = Prisma.RestaurantGetPayload<{
 
 type ImageGroup = {
   uuid: string
-  url: string
+  publicId: string
   sortOrder: number
 }
 
@@ -48,7 +47,7 @@ export function toPublicRestaurantListItemFromPrisma(
     coverImage: cover
       ? {
         uuid: cover.uuid,
-        url: resolveImageUrl(cover.url),
+        publicId: cover.publicId,
         sortOrder: cover.sortOrder,
       }
       : null,
@@ -69,10 +68,10 @@ export function toRestaurantListItemFromRaw(row: RestaurantWithScoreRow) {
     rating: formatNumber(row.rating, 1),
     ratingCount: row.ratingCount,
     reviewCount: row.reviewCount,
-    coverImage: row.coverUrl
+    coverImage: row.coverPublicId
       ? {
         uuid: row.coverUuid,
-        url: resolveImageUrl(row.coverUrl),
+        publicId: row.coverPublicId,
         sortOrder: row.coverSortOrder,
       }
       : null,
@@ -91,7 +90,7 @@ export function toRestaurantDetail(row: RestaurantWithImages) {
   row.images.forEach(img => {
     imagesByType[img.type as 'cover' | 'gallery' | 'menu'].push({
       uuid: img.uuid,
-      url: img.url,
+      publicId: img.publicId,
       sortOrder: img.sortOrder,
     })
   })
@@ -111,28 +110,6 @@ export function toRestaurantDetail(row: RestaurantWithImages) {
     images: imagesByType,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? null,
-  }
-}
-
-
-// 將餐廳詳細資料格式化為 API 回應格式（包含圖片 URL 解析）
-export function formatRestaurantForClient(restaurant: ReturnType<typeof toRestaurantDetail>) {
-  return {
-    ...restaurant,
-    images: {
-      cover: restaurant.images.cover.map(img => ({
-        ...img,
-        url: resolveImageUrl(img.url),
-      })),
-      gallery: restaurant.images.gallery.map(img => ({
-        ...img,
-        url: resolveImageUrl(img.url),
-      })),
-      menu: restaurant.images.menu.map(img => ({
-        ...img,
-        url: resolveImageUrl(img.url),
-      })),
-    },
   }
 }
 
