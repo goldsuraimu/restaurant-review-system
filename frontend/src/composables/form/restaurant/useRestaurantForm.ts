@@ -11,7 +11,7 @@ const namePattern = /^.{2,50}$/
 const nameEnPattern = /^[A-Za-z\s.'&-]{2,50}$/
 const categoryPattern = /^.{1,30}$/
 const locationPattern = /^.{5,100}$/
-const phonePattern = /^0[2-9]\d{7,8}(?:(?:\s*|#|[eE][xX][tT])\d{1,5})?$/
+const phonePattern = /^0[2-9]\d{4,8}(?:(?:\s*|#|[eE][xX][tT])\d{1,5})?$/
 const descriptionPattern = /^[\s\S]{0,500}$/
 
 export function useRestaurantForm(

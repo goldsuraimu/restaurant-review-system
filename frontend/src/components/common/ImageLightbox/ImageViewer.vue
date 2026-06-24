@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 import { useImageLightbox } from '@/composables/ui/useImageLightbox'
 import { getThumbnailUrl, getViewerUrl } from '@/utils/cloudinary'
@@ -93,6 +93,30 @@ const {
   transformStyle,
 } = useImageLightbox(
   computed(() => props.images)
+)
+
+// 預載圖片，避免切換時閃爍
+function preloadViewerImages() {
+  props.images.forEach((img) => {
+    if (!img.publicId) return
+
+    const image = new Image()
+
+    image.src = getViewerUrl(
+      img.publicId
+    )
+  })
+}
+
+// 監聽 images 的變化，並預載圖片
+watch(
+  () => props.images,
+  () => {
+    preloadViewerImages()
+  },
+  {
+    immediate: true,
+  }
 )
 
 function handleImageClick() {
