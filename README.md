@@ -97,7 +97,7 @@ flowchart LR
 
 本系統採用 Prisma ORM + PostgreSQL。
 
-![ERD](https://res.cloudinary.com/dl3krnjnd/image/upload/v1782373204/database_ERD.png)
+![ERD](https://res.cloudinary.com/dl3krnjnd/image/upload/f_auto,q_auto/v1782373204/database_ERD.png)
 
 ---
 
@@ -109,7 +109,7 @@ flowchart LR
 * 搜尋功能
 * 排序功能
 
-![首頁](https://res.cloudinary.com/dl3krnjnd/image/upload/v1782370231/home.png)
+![首頁](https://res.cloudinary.com/dl3krnjnd/image/upload/f_auto,q_auto/v1782370231/home.png)
 
 ---
 
@@ -120,7 +120,7 @@ flowchart LR
 * 菜單圖片
 * 評論區
 
-![餐廳詳細頁](https://res.cloudinary.com/dl3krnjnd/image/upload/v1782370268/restaurant_detail_page.png)
+![餐廳詳細頁](https://res.cloudinary.com/dl3krnjnd/image/upload/f_auto,q_auto/v1782370268/restaurant_detail_page.png)
 
 ---
 
@@ -130,7 +130,7 @@ flowchart LR
 * 評論趨勢圖
 * Top 5 餐廳評分排行
 
-![業者 Dashboard](https://res.cloudinary.com/dl3krnjnd/image/upload/v1782369390/owner_dashboard.jpg)
+![業者 Dashboard](https://res.cloudinary.com/dl3krnjnd/image/upload/f_auto,q_auto/v1782369390/owner_dashboard.jpg)
 
 ---
 
@@ -139,19 +139,19 @@ flowchart LR
 * **功能動線**：可從「業者 Dashboard」餐廳評分排行點擊「查看更多」導頁至此
 * 完整的餐廳評分與排名數據列表
 
-![餐廳評分詳情](https://res.cloudinary.com/dl3krnjnd/image/upload/v1782369516/restaurant_rating_list.jpg)
+![餐廳評分詳情](https://res.cloudinary.com/dl3krnjnd/image/upload/f_auto,q_auto/v1782369516/restaurant_rating_list.jpg)
 
 ---
 
 ## 餐廳建立與送審
 
-![建立餐廳](https://res.cloudinary.com/dl3krnjnd/image/upload/v1782369825/create_restaurant_submit.jpg)
+![建立餐廳](https://res.cloudinary.com/dl3krnjnd/image/upload/f_auto,q_auto/v1782369825/create_restaurant_submit.jpg)
 
 ---
 
 ## 餐廳評論管理
 
-![評論管理](https://res.cloudinary.com/dl3krnjnd/image/upload/v1782369860/restaurant_review_management.jpg)
+![評論管理](https://res.cloudinary.com/dl3krnjnd/image/upload/f_auto,q_auto/v1782369860/restaurant_review_management.jpg)
 
 ---
 
@@ -159,13 +159,13 @@ flowchart LR
 
 * 待審核餐廳數
 
-![管理員 Dashboard](https://res.cloudinary.com/dl3krnjnd/image/upload/v1782369913/admin_main_dashboard.png)
+![管理員 Dashboard](https://res.cloudinary.com/dl3krnjnd/image/upload/f_auto,q_auto/v1782369913/admin_main_dashboard.png)
 
 ---
 
 ## 管理員審核頁
 
-![管理員審核](https://res.cloudinary.com/dl3krnjnd/image/upload/v1782369770/admin_review_page.png)
+![管理員審核](https://res.cloudinary.com/dl3krnjnd/image/upload/f_auto,q_auto/v1782369770/admin_review_page.png)
 
 ---
 
