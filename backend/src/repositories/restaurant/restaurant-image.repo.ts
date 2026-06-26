@@ -27,7 +27,7 @@ export async function findByRestaurantUuid(
 ) {
   return client.restaurantImage.findMany({
     where: {
-      restaurantUuid,
+      newRestaurant: { uuid: restaurantUuid },
     },
     select: {
       uuid: true,
@@ -46,7 +46,21 @@ export async function insertImage(
   data: InsertRestaurantImageDto,
   client: DBClient = prisma
 ) {
-  return client.restaurantImage.create({ data })
+  const { restaurantUuid, ...rest } = data;
+
+  return client.restaurantImage.create({ 
+    data: {
+      ...rest,
+      ...(restaurantUuid && {
+        restaurant: {
+          connect: { uuid: restaurantUuid }
+        },
+        newRestaurant: {
+          connect: { uuid: restaurantUuid }
+        }
+      })
+    }, 
+  })
 }
 
 
@@ -55,9 +69,8 @@ export async function insertImages(
   data: InsertRestaurantImageDto[],
   client: DBClient = prisma
 ) {
-  return client.restaurantImage.createMany({
-    data,
-  })
+  const promises = data.map(item => insertImage(item, client));
+  return Promise.all(promises);
 }
 
 // 刪除餐廳圖片 (多張)

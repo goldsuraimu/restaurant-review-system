@@ -27,7 +27,7 @@ module.exports = async function (prisma) {
   })
 
   for (const review of reviews) {
-    const type = ownerTypeMap[review.restaurantUuid]
+    const type = ownerTypeMap[review.restaurant.uuid] 
 
     let shouldReply = false
     let replyDelayHours = 0
@@ -54,11 +54,13 @@ module.exports = async function (prisma) {
     await prisma.reviewReply.create({
       data: {
         uuid: uuidv4(),
-        reviewUuid: review.uuid,
         content: generateReplyContent(
           review.rating
         ),
         createdAt: replyTime,
+        review: {
+          connect: { uuid: review.uuid }
+        }
       },
     })
   }

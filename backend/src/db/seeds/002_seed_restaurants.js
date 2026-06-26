@@ -54,13 +54,15 @@ async function createRestaurantsForOwner(prisma, restaurants, owner) {
     const restaurant = await prisma.restaurant.create({
       data: {
         uuid: restaurantUuid,
-        ownerUuid: owner.uuid,
         name: r.name,
         nameEn: r.name_en || null,
         category: r.category,
         location: r.location || null,
         phone: r.phone || null,
         description: r.description || null,
+        owner: {
+          connect: { uuid: owner.uuid }
+        }
       },
     });
 
@@ -89,18 +91,14 @@ async function createRestaurantImages(
 
     await prisma.restaurantImage.create({
       data: {
-
         uuid: uuidv4(),
-
-        restaurantUuid,
-
         type: 'cover',
-
         url: cloudinaryUrl(images.cover),
-
         publicId: images.cover,
-
         sortOrder: 0,
+        restaurant: {
+          connect: { uuid: restaurantUuid }
+        }
       },
     })
   }
@@ -117,18 +115,14 @@ async function createRestaurantImages(
 
     await prisma.restaurantImage.create({
       data: {
-
         uuid: uuidv4(),
-
-        restaurantUuid,
-
         type: 'gallery',
-
         url: cloudinaryUrl(images.gallery[i]),
-
         publicId: images.gallery[i],
-
         sortOrder: i + 1,
+        restaurant: {
+          connect: { uuid: restaurantUuid }
+        }
       },
     })
   }
@@ -145,19 +139,14 @@ async function createRestaurantImages(
 
     await prisma.restaurantImage.create({
       data: {
-
         uuid: uuidv4(),
-
-        restaurantUuid,
-
         type: 'menu',
-
-        url:
-          cloudinaryUrl(images.menu[i]),
-
+        url: cloudinaryUrl(images.menu[i]),
         publicId: images.menu[i],
-
         sortOrder: i + 1,
+        restaurant: {
+          connect: { uuid: restaurantUuid }
+        }
       },
     })
   }

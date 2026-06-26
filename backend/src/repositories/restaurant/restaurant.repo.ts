@@ -104,7 +104,7 @@ export async function findOwnerRestaurantRankings(
   // 先算全部平均 C
   const avgResult = await client.restaurant.aggregate({
     where: {
-      ownerUuid,
+      newOwner: { uuid: ownerUuid },
       rating: { not: null }
     },
     _avg: {
@@ -160,7 +160,7 @@ export async function findOwnerRestaurantRankings(
 
   const total = await client.restaurant.count({
     where: {
-      ownerUuid,
+      newOwner: { uuid: ownerUuid },
       rating: { not: null },
       reviewCount: { gt: 0 }
     }
@@ -186,8 +186,18 @@ export async function createPublishedRestaurant(
   },
   client: DBClient = prisma
 ) {
+  const { ownerUuid, ...rest } = data;
+
   return client.restaurant.create({
-    data
+    data: {
+      ...rest,
+      owner: {
+        connect: { uuid: ownerUuid }
+      },
+      newOwner: {
+        connect: { uuid: ownerUuid }
+      }
+    }
   })
 }
 // #endregion

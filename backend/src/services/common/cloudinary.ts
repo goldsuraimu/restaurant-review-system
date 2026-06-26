@@ -1,7 +1,4 @@
 import { v2 as cloudinary } from 'cloudinary'
-import streamifier from 'streamifier'
-
-import { ApiError } from '#/utils/api-error'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
@@ -27,66 +24,6 @@ export type CloudinarySignParams = {
 // =========================
 // Cloudinary 相關服務
 // =========================
-
-// 上傳圖片
-export function uploadImage(
-  file: Express.Multer.File,
-  folder: string,
-  publicId: string,
-): Promise<{ url: string; publicId: string }> {
-
-  // =========================
-  // 白名單 MIME 驗證
-  // =========================
-  const allowedMimeTypes = [
-    'image/jpeg',
-    'image/png',
-    'image/webp',
-    'image/jpg',
-  ]
-
-  // 禁止 SVG
-  if (file.mimetype === 'image/svg+xml') {
-    throw new ApiError('SVG 格式不允許上傳', {
-      status: 400,
-      code: 'INVALID_IMAGE_FORMAT',
-    })
-  }
-
-  // 非法格式
-  if (!allowedMimeTypes.includes(file.mimetype)) {
-    throw new ApiError('不支援的圖片格式', {
-      status: 400,
-      code: 'INVALID_IMAGE_FORMAT',
-    })
-  }
-
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        public_id: publicId,
-        resource_type: 'image',
-        transformation: [
-          {
-            fetch_format: 'auto', // 自動 webp / avif
-            quality: 'auto',
-          },
-        ],
-      },
-      (error, result) => {
-        if (error || !result) return reject(error)
-
-        resolve({
-          url: result.secure_url,
-          publicId: result.public_id,
-        })
-      }
-    )
-
-    streamifier.createReadStream(file.buffer).pipe(stream)
-  })
-}
 
 // 刪除圖片
 export function deleteImage(publicId: string) {

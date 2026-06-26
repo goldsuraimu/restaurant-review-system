@@ -109,18 +109,14 @@ async function createDraftImages(
   await prisma.restaurantDraftImage.create({
     data: {
       uuid: uuidv4(),
-
-      restaurantDraftUuid,
-
       type: 'cover',
-
       url: cloudinaryUrl(images.cover),
-
       sourceType,
-
       publicId: images.cover,
-
       sortOrder: 0,
+      restaurantDraft: {
+        connect: { uuid: restaurantDraftUuid }
+      }
     },
   })
 
@@ -129,19 +125,14 @@ async function createDraftImages(
     await prisma.restaurantDraftImage.create({
       data: {
         uuid: uuidv4(),
-
-        restaurantDraftUuid,
-
         type: 'gallery',
-
         url: cloudinaryUrl(images.gallery[i]),
-
         sourceType,
-
-        publicId:
-          images.gallery[i],
-
+        publicId: images.gallery[i],
         sortOrder: i,
+        restaurantDraft: {
+          connect: { uuid: restaurantDraftUuid }
+        }
       },
     })
   }
@@ -151,19 +142,14 @@ async function createDraftImages(
     await prisma.restaurantDraftImage.create({
       data: {
         uuid: uuidv4(),
-
-        restaurantDraftUuid,
-
         type: 'menu',
-
         url: cloudinaryUrl(images.menu[i]),
-
         sourceType,
-
-        publicId:
-          images.menu[i],
-
+        publicId: images.menu[i],
         sortOrder: i,
+        restaurantDraft: {
+          connect: { uuid: restaurantDraftUuid }
+        }
       },
     })
   }
@@ -199,31 +185,20 @@ module.exports = async function (prisma) {
     await prisma.restaurantDraft.create({
       data: {
         uuid: ramenDraftUuid,
-
-        ownerUuid: ownerA.uuid,
-
         restaurantUuid: uuidv4(),
-
         name: '麵屋武藏 信義店',
-
         nameEn: 'Menya Musashi Xinyi',
-
         category: '日本料理',
-
         location: '台北市信義區松壽路 20 號',
-
         phone: '0227228899',
-
-        description:
-          '主打濃厚豚骨湯頭與炙燒叉燒拉麵。',
-
+        description: '主打濃厚豚骨湯頭與炙燒叉燒拉麵。',
         status: 'PENDING',
-
         submittedAt: daysAgo(1),
-
         createdAt: daysAgo(2),
-
         updatedAt: daysAgo(1),
+        owner: {
+          connect: { uuid: ownerA.uuid }
+        }
       },
     })
 
@@ -243,36 +218,22 @@ module.exports = async function (prisma) {
     await prisma.restaurantDraft.create({
       data: {
         uuid: sushiDraftUuid,
-
-        ownerUuid: ownerA.uuid,
-
         restaurantUuid: uuidv4(),
-
         name: '鮨川 本店',
-
         nameEn: 'Sushi Kawa',
-
         category: '日本料理',
-
         location: '台北市大安區仁愛路四段 88 號',
-
         phone: '0227012233',
-
-        description:
-          '提供每日新鮮直送握壽司與生魚片。',
-
+        description: '提供每日新鮮直送握壽司與生魚片。',
         status: 'PENDING',
-
-        reviewNote:
-          '請補齊菜單照片與店內環境照。',
-
+        reviewNote: '請補齊菜單照片與店內環境照。',
         rejectedAt: daysAgo(5),
-
         submittedAt: daysAgo(1),
-
         createdAt: daysAgo(7),
-
         updatedAt: daysAgo(1),
+        owner: {
+          connect: { uuid: ownerA.uuid }
+        }
       },
     })
 
@@ -293,36 +254,22 @@ module.exports = async function (prisma) {
     await prisma.restaurantDraft.create({
       data: {
         uuid: breakfastDraftUuid,
-
-        ownerUuid: ownerA.uuid,
-
         restaurantUuid: uuidv4(),
-
         name: '晨間號 Brunch',
-
         nameEn: 'Morning House Brunch',
-
         category: '早餐',
-
         location: '台北市中山區民生東路二段 50 號',
-
         phone: '0225551122',
-
-        description:
-          '主打手作三明治與早午餐拼盤。',
-
+        description: '主打手作三明治與早午餐拼盤。',
         status: 'REJECTED',
-
-        reviewNote:
-          '封面圖片解析度不足。',
-
+        reviewNote: '封面圖片解析度不足。',
         rejectedAt: daysAgo(2),
-
         submittedAt: daysAgo(4),
-
         createdAt: daysAgo(5),
-
         updatedAt: daysAgo(2),
+        owner: {
+          connect: { uuid: ownerA.uuid }
+        }
       },
     })
 
@@ -342,38 +289,20 @@ module.exports = async function (prisma) {
     await prisma.restaurantDraft.create({
       data: {
         uuid: uuidv4(),
-
-        ownerUuid:
-          published1.ownerUuid,
-
-        restaurantUuid:
-          published1.uuid,
-
-        name:
-          `${published1.name} 信義二店`,
-
-        nameEn:
-          published1.nameEn,
-
-        category:
-          published1.category,
-
-        location:
-          published1.location,
-
-        phone:
-          published1.phone,
-
-        description:
-          '新增晚餐限定菜單與套餐內容。',
-
+        restaurantUuid: published1.uuid,
+        name: `${published1.name} 信義二店`,
+        nameEn: published1.nameEn,
+        category: published1.category,
+        location: published1.location,
+        phone: published1.phone,
+        description: '新增晚餐限定菜單與套餐內容。',
         status: 'PENDING',
-
         submittedAt: daysAgo(1),
-
         createdAt: daysAgo(3),
-
         updatedAt: daysAgo(1),
+        owner: {
+          connect: { id: published1.userId }
+        }
       },
     })
 
@@ -381,28 +310,18 @@ module.exports = async function (prisma) {
     prisma,
     updateDraft1.uuid,
     {
-      cover:
-        published1.images
-          .filter(
-            (i) => i.type === 'cover'
-          )
-          .map((i) => i.publicId)
-          .slice(0, 1)[0],
+      cover: published1.images
+        .filter((i) => i.type === 'cover')
+        .map((i) => i.publicId)
+        .slice(0, 1)[0],
 
-      gallery:
-        published1.images
-          .filter(
-            (i) =>
-              i.type === 'gallery'
-          )
-          .map((i) => i.publicId),
+      gallery: published1.images
+        .filter((i) => i.type === 'gallery')
+        .map((i) => i.publicId),
 
-      menu:
-        published1.images
-          .filter(
-            (i) => i.type === 'menu'
-          )
-          .map((i) => i.publicId),
+      menu: published1.images
+        .filter((i) => i.type === 'menu')
+        .map((i) => i.publicId),
     },
     'PUBLISHED'
   )
@@ -417,43 +336,22 @@ module.exports = async function (prisma) {
     await prisma.restaurantDraft.create({
       data: {
         uuid: uuidv4(),
-
-        ownerUuid:
-          published2.ownerUuid,
-
-        restaurantUuid:
-          published2.uuid,
-
-        name:
-          published2.name,
-
-        nameEn:
-          published2.nameEn,
-
-        category:
-          published2.category,
-
-        location:
-          published2.location,
-
-        phone:
-          published2.phone,
-
-        description:
-          '新增雙人套餐與商業午餐。',
-
+        restaurantUuid: published2.uuid,
+        name: published2.name,
+        nameEn: published2.nameEn,
+        category: published2.category,
+        location: published2.location,
+        phone: published2.phone,
+        description: '新增雙人套餐與商業午餐。',
         status: 'PENDING',
-
-        reviewNote:
-          '請重新上傳封面圖片。',
-
+        reviewNote: '請重新上傳封面圖片。',
         rejectedAt: daysAgo(5),
-
         submittedAt: daysAgo(1),
-
         createdAt: daysAgo(7),
-
         updatedAt: daysAgo(1),
+        owner: {
+          connect: { id: published2.userId }
+        }
       },
     })
 
@@ -461,28 +359,18 @@ module.exports = async function (prisma) {
     prisma,
     updateDraft2.uuid,
     {
-      cover:
-        published2.images
-          .filter(
-            (i) => i.type === 'cover'
-          )
-          .map((i) => i.publicId)
-          .slice(0, 1)[0],
+      cover: published2.images
+        .filter((i) => i.type === 'cover')
+        .map((i) => i.publicId)
+        .slice(0, 1)[0],
 
-      gallery:
-        published2.images
-          .filter(
-            (i) =>
-              i.type === 'gallery'
-          )
-          .map((i) => i.publicId),
+      gallery: published2.images
+        .filter((i) => i.type === 'gallery')
+        .map((i) => i.publicId),
 
-      menu:
-        published2.images
-          .filter(
-            (i) => i.type === 'menu'
-          )
-          .map((i) => i.publicId),
+      menu: published2.images
+        .filter((i) => i.type === 'menu')
+        .map((i) => i.publicId),
     },
     'PUBLISHED'
   )
@@ -497,43 +385,22 @@ module.exports = async function (prisma) {
     await prisma.restaurantDraft.create({
       data: {
         uuid: uuidv4(),
-
-        ownerUuid:
-          published3.ownerUuid,
-
-        restaurantUuid:
-          published3.uuid,
-
-        name:
-          published3.name,
-
-        nameEn:
-          published3.nameEn,
-
-        category:
-          published3.category,
-
-        location:
-          published3.location,
-
-        phone:
-          published3.phone,
-
-        description:
-          '更新酒單與晚間現場演出資訊。',
-
+        restaurantUuid: published3.uuid,
+        name: published3.name,
+        nameEn: published3.nameEn,
+        category: published3.category,
+        location: published3.location,
+        phone: published3.phone,
+        description: '更新酒單與晚間現場演出資訊。',
         status: 'REJECTED',
-
-        reviewNote:
-          '菜單照片過少，請補充。',
-
+        reviewNote: '菜單照片過少，請補充。',
         rejectedAt: daysAgo(2),
-
         submittedAt: daysAgo(4),
-
         createdAt: daysAgo(6),
-
         updatedAt: daysAgo(2),
+        owner: {
+          connect: { id: published3.userId }
+        }
       },
     })
 
@@ -541,28 +408,18 @@ module.exports = async function (prisma) {
     prisma,
     updateDraft3.uuid,
     {
-      cover:
-        published3.images
-          .filter(
-            (i) => i.type === 'cover'
-          )
-          .map((i) => i.publicId)
-          .slice(0, 1)[0],
+      cover: published3.images
+        .filter((i) => i.type === 'cover')
+        .map((i) => i.publicId)
+        .slice(0, 1)[0],
 
-      gallery:
-        published3.images
-          .filter(
-            (i) =>
-              i.type === 'gallery'
-          )
-          .map((i) => i.publicId),
+      gallery: published3.images
+        .filter((i) => i.type === 'gallery')
+        .map((i) => i.publicId),
 
-      menu:
-        published3.images
-          .filter(
-            (i) => i.type === 'menu'
-          )
-          .map((i) => i.publicId),
+      menu: published3.images
+        .filter((i) => i.type === 'menu')
+        .map((i) => i.publicId),
     },
     'PUBLISHED'
   )

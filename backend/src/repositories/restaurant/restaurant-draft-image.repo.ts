@@ -31,7 +31,7 @@ export async function findByDraftUuid(
 ) {
   const rows = await client.restaurantDraftImage.findMany({
     where: {
-      restaurantDraftUuid,
+      newRestaurantDraft: { uuid: restaurantDraftUuid },
     },
     orderBy: {
       sortOrder: 'asc',
@@ -53,10 +53,19 @@ export async function insertImage(
   data: InsertRestaurantDraftImageDto,
   client: DBClient = prisma
 ) {
+
+  const { restaurantDraftUuid, ...rest } = data;
+
   return client.restaurantDraftImage.create({
     data: {
-      ...data,
+      ...rest,
       sourceType: data.sourceType ?? 'DRAFT_UPLOAD',
+      restaurantDraft: {
+        connect: { uuid: restaurantDraftUuid }
+      },
+      newRestaurantDraft: {
+        connect: { uuid: restaurantDraftUuid }
+      },
     },
   })
 }
@@ -68,12 +77,8 @@ export async function insertImages(
   data: InsertRestaurantDraftImageDto[],
   client: DBClient = prisma
 ) {
-  return client.restaurantDraftImage.createMany({
-    data: data.map(item => ({
-      ...item,
-      sourceType: item.sourceType ?? 'DRAFT_UPLOAD',
-    })),
-  })
+  const promises = data.map(item => insertImage(item, client));
+  return Promise.all(promises);
 }
 // #endregion
 

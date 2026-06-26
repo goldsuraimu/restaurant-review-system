@@ -18,8 +18,13 @@ export async function insert({
   return client.refreshToken.create({
     data: {
       id,
-      userUuid,
       expiresAt,
+      user: {
+        connect: { uuid: userUuid }
+      },
+      newUser: {
+        connect: { uuid: userUuid }
+      }
     },
   });
 }

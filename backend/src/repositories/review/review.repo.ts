@@ -40,7 +40,9 @@ export async function findByRestaurantUuidCursor({
           : [{ rating: 'asc' as const }, { createdAt: 'desc' as const }]
 
   return client.review.findMany({
-    where: { restaurantUuid },
+    where: { 
+      newRestaurant: { uuid: restaurantUuid } 
+     },
     take: limit + 1,
     ...(cursor && {
       cursor: { uuid: cursor },
@@ -83,7 +85,7 @@ export async function findOwnerReviews({
 
   const where: any = {
     restaurant: {
-      ownerUuid,
+      newOwner: { uuid: ownerUuid },
       ...(restaurantUuid ? { uuid: restaurantUuid } : {})
     }
   }
@@ -130,8 +132,8 @@ export async function findMyReview(
 ) {
   return client.review.findFirst({
     where: {
-      restaurantUuid,
-      userUuid,
+      newRestaurant: { uuid: restaurantUuid },
+      newUser: { uuid: userUuid },
     },
     include: {
       images: true,
@@ -200,6 +202,12 @@ export async function createReview(
       user: {
         connect: { uuid: data.userUuid },
       },
+      newRestaurant: {
+        connect: { uuid: data.restaurantUuid }
+      },
+      newUser: {
+        connect: { uuid: data.userUuid }
+      }
     },
   })
 }
@@ -232,6 +240,26 @@ export async function deleteReview(
   })
 }
 
+// 新增評論圖片（單張）
+export async function createSingleImage(
+  item: { uuid: string; reviewUuid: string; url: string; publicId: string; },
+  client: DBClient = prisma
+) {
+  return client.reviewImage.create({
+    data: {
+      uuid: item.uuid,
+      url: item.url,
+      publicId: item.publicId,
+      review: {
+        connect: { uuid: item.reviewUuid }
+      },
+      newReview: {
+        connect: { uuid: item.reviewUuid }
+      }
+    }
+  })
+}
+
 // 新增評論圖片
 export async function createImages(
   images: { 
@@ -242,9 +270,8 @@ export async function createImages(
   }[],
   client: DBClient = prisma
 ) {
-  return client.reviewImage.createMany({
-    data: images,
-  })
+  const promises = images.map(img => createSingleImage(img, client));
+  return Promise.all(promises);
 }
 
 // 刪除評論圖片
@@ -268,8 +295,13 @@ export async function createReply(data: {
   return client.reviewReply.create({
     data: {
       uuid: data.uuid,
-      reviewUuid: data.reviewUuid,
-      content: data.content
+      content: data.content,
+      review: {
+        connect: { uuid: data.reviewUuid }
+      },
+      newReview: {
+        connect: { uuid: data.reviewUuid }
+      }
     }
   })
 }

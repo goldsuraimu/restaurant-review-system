@@ -118,7 +118,6 @@ export async function createDraft(
   return client.restaurantDraft.create({
     data: {
       uuid: data.uuid,
-      ownerUuid: data.ownerUuid,
       restaurantUuid: data.restaurantUuid,
 
       name: data.name,
@@ -131,6 +130,12 @@ export async function createDraft(
       submittedAt: data.submittedAt,
 
       status: RestaurantDraftStatus.PENDING,
+      owner: {
+        connect: { uuid: data.ownerUuid }
+      },
+      newOwner: {
+        connect: { uuid: data.ownerUuid }
+      }
     },
   })
 }

@@ -29,6 +29,11 @@ model User {
   
   refreshTokens RefreshToken[]
   reviews Review[]
+
+  newRestaurants   Restaurant[]      @relation("NewUserToRestaurant")
+  newDrafts        RestaurantDraft[] @relation("NewUserToDraft")
+  newTokens        RefreshToken[]    @relation("NewUserToToken")
+  newReviews       Review[]          @relation("NewUserToReview")
 }
 
 model Restaurant {
@@ -37,6 +42,9 @@ model Restaurant {
 
   ownerUuid    String   
   owner        User     @relation(fields: [ownerUuid], references: [uuid], onDelete: Cascade)
+
+  userId       Int?   
+  newOwner     User?    @relation("NewUserToRestaurant", fields: [userId], references: [id])
 
   name         String
   nameEn       String?  
@@ -57,6 +65,9 @@ model Restaurant {
 
   images       RestaurantImage[]
   reviews      Review[]
+
+  newImages    RestaurantImage[] @relation("NewResToImage")
+  newReviews   Review[]          @relation("NewResToReview")
 } 
 
 model RestaurantDraft {
@@ -65,6 +76,10 @@ model RestaurantDraft {
 
   ownerUuid      String
   owner          User     @relation(fields: [ownerUuid], references: [uuid], onDelete: Cascade)
+
+  userId         Int?
+  newOwner       User?    @relation("NewUserToDraft", fields: [userId], references: [id])
+
 
   restaurantUuid String  @unique
 
@@ -87,6 +102,8 @@ model RestaurantDraft {
   rejectedAt     DateTime?
 
   images         RestaurantDraftImage[]
+
+  newImages      RestaurantDraftImage[] @relation("NewDraftToImage")
 }
 
 model RestaurantImage {
@@ -95,6 +112,10 @@ model RestaurantImage {
 
   restaurantUuid String?   
   restaurant     Restaurant?  @relation(fields: [restaurantUuid], references: [uuid], onDelete: Cascade)
+
+  restaurantId   Int?
+  newRestaurant  Restaurant? @relation("NewResToImage", fields: [restaurantId], references: [id])
+
 
   type           String
   url            String
@@ -112,6 +133,10 @@ model RestaurantDraftImage {
   restaurantDraftUuid  String
 
   restaurantDraft      RestaurantDraft   @relation(fields: [restaurantDraftUuid], references: [uuid], onDelete: Cascade)
+
+  restaurantDraftId   Int?
+  newRestaurantDraft  RestaurantDraft? @relation("NewDraftToImage", fields: [restaurantDraftId], references: [id])
+
 
   type                 String
   url                  String
@@ -135,6 +160,12 @@ model Review {
   userUuid        String  
   user            User     @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
 
+  restaurantId   Int?  
+  newRestaurant  Restaurant? @relation("NewResToReview", fields: [restaurantId], references: [id])
+  userId         Int?  
+  newUser        User?       @relation("NewUserToReview", fields: [userId], references: [id])
+
+
   rating          Int
   content         String?
 
@@ -143,6 +174,9 @@ model Review {
 
   images          ReviewImage[]
   reply           ReviewReply? @relation("ReviewToReply")
+
+  newImages      ReviewImage[] @relation("NewReviewToImage")
+  newReply       ReviewReply?  @relation("NewReplyToReview")
 
   @@unique([restaurantUuid, userUuid])
 }
@@ -154,6 +188,10 @@ model ReviewImage {
   reviewUuid  String  
   review      Review   @relation(fields: [reviewUuid], references: [uuid], onDelete: Cascade)
 
+  reviewId    Int?  
+  newReview   Review?  @relation("NewReviewToImage", fields: [reviewId], references: [id])
+
+
   url         String?
   publicId    String?
 
@@ -163,7 +201,12 @@ model ReviewImage {
 model ReviewReply {
   id        Int      @id @default(autoincrement())
   uuid      String   @unique
-  reviewUuid String  @unique  
+  reviewUuid String  @unique
+
+  reviewId   Int?     @unique  
+  newReview  Review?  @relation("NewReplyToReview", fields: [reviewId], references: [id])
+
+
   content   String
   createdAt DateTime @default(now())   
   updatedAt DateTime @updatedAt   
@@ -174,6 +217,11 @@ model ReviewReply {
 model RefreshToken {
   id        String   @id
   userUuid  String  
+
+  userId    Int?  
+  newUser   User?    @relation("NewUserToToken", fields: [userId], references: [id])
+
+
   expiresAt Int     
   revokedAt Int?    
 

@@ -67,11 +67,15 @@ module.exports = async function (prisma) {
       await prisma.review.create({
         data: {
           uuid: uuidv4(),
-          restaurantUuid: restaurant.uuid,
-          userUuid: user.uuid,
           rating,
           content: generateReviewContent(rating),
           createdAt,
+          restaurant: {
+            connect: { uuid: restaurant.uuid }
+          },
+          user: {
+            connect: { uuid: user.uuid }
+          }
         },
       })
 

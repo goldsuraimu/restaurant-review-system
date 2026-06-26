@@ -20,7 +20,7 @@ export async function findOwnerRestaurants(
 
     client.restaurant.findMany({
       where: {
-        ownerUuid,
+        newOwner: { uuid: ownerUuid },
       },
 
       orderBy: [
@@ -45,7 +45,7 @@ export async function findOwnerRestaurants(
 
     client.restaurantDraft.findMany({
       where: {
-        ownerUuid,
+        newOwner: { uuid: ownerUuid },
       },
 
       orderBy: [

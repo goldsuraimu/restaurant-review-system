@@ -81,7 +81,7 @@ export async function findRestaurantListWithRelevance(
   const rows = await client.$queryRaw<RestaurantWithScoreRow[]>`
     WITH ranked_restaurants AS (
       SELECT
-        r."uuid", r."name", r."nameEn", r."category", r."rating", r."ratingCount", r."reviewCount", r."createdAt",
+        r."id", r."uuid", r."name", r."nameEn", r."category", r."rating", r."ratingCount", r."reviewCount", r."createdAt",
         (${finalScoreSql}) AS "score",
         ( 
           (${finalScoreSql}) * 0.6 
@@ -101,7 +101,7 @@ export async function findRestaurantListWithRelevance(
       img."sortOrder" AS "coverSortOrder"
     FROM ranked_restaurants r
     LEFT JOIN "RestaurantImage" img
-      ON img."restaurantUuid" = r."uuid" AND img."type" = 'cover'
+      ON img."restaurantId" = r."id" AND img."type" = 'cover'
     ORDER BY r."final_rank" DESC
   `
 

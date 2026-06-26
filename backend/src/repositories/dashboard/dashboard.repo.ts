@@ -9,7 +9,9 @@ export async function countOwnerRestaurants(
   client: DBClient = prisma
 ) {
   return client.restaurant.count({
-    where: { ownerUuid }
+    where: { 
+      newOwner: { uuid: ownerUuid } 
+     }
   })
 }
 
@@ -20,8 +22,8 @@ export async function countUnrepliedReviews(
 ) {
   return client.review.count({
     where: {
-      restaurant: {
-        ownerUuid
+      newRestaurant: {
+        newOwner: { uuid: ownerUuid }
       },
       reply: null
     }
@@ -37,8 +39,8 @@ export async function countTodayReviews(
 ) {
   return client.review.count({
     where: {
-      restaurant: {
-        ownerUuid
+      newRestaurant: {
+        newOwner: { uuid: ownerUuid }
       },
       createdAt: {
         gte: startOfToday,
@@ -54,10 +56,10 @@ export async function getAverageRating(
   client: DBClient = prisma
 ) {
   const result = await client.restaurant.aggregate({
-    where: { 
-      ownerUuid,
+    where: {
+      newOwner: { uuid: ownerUuid },
       rating: { not: null }
-     },
+    },
     _avg: {
       rating: true
     }
@@ -73,14 +75,14 @@ export async function getReplyRate(
 ) {
   const total = await client.review.count({
     where: {
-      restaurant: { ownerUuid }
+      newRestaurant: { newOwner: { uuid: ownerUuid } }
     }
   })
 
   const replied = await client.review.count({
     where: {
-      restaurant: { ownerUuid },
-      reply: {
+      newRestaurant: { newOwner: { uuid: ownerUuid } },
+      newReply: {
         isNot: null
       }
     }
@@ -103,7 +105,7 @@ export async function getReviewTrend(
       CAST((EXTRACT(EPOCH FROM r."createdAt") - ${sinceSec}) / 86400 AS INTEGER) as day_index,
       COUNT(*) as "count"
     FROM "Review" r
-    JOIN "Restaurant" res ON r."restaurantUuid" = res."uuid"
+    JOIN "Restaurant" res ON r."restaurantId" = res."id"
     WHERE res."ownerUuid" = ${ownerUuid}
     AND EXTRACT(EPOCH FROM r."createdAt") >= ${sinceSec}
     AND EXTRACT(EPOCH FROM r."createdAt") < ${untilSec}
@@ -127,7 +129,7 @@ export async function findTopOwnerRestaurantsByBayesian(
 ) {
   const avgResult = await client.restaurant.aggregate({
     where: {
-      ownerUuid,
+      newOwner: { uuid: ownerUuid },
       rating: { not: null }
     },
     _avg: {
@@ -185,8 +187,8 @@ export async function getReplyTimeStats(
       SELECT
         EXTRACT(EPOCH FROM (rr."createdAt" - r."createdAt")) * 1000 AS diff
       FROM "Review" r
-      JOIN "Restaurant" res ON r."restaurantUuid" = res."uuid"
-      JOIN "ReviewReply" rr ON rr."reviewUuid" = r."uuid"
+      JOIN "Restaurant" res ON r."restaurantId" = res."id"
+      JOIN "ReviewReply" rr ON rr."reviewId" = r."id"
       WHERE res."ownerUuid" = ${ownerUuid}
     )
 
