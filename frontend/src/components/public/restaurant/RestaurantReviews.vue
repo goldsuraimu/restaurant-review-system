@@ -398,7 +398,7 @@ async function handleEditReview(payload: UpdateReview) {
       currentUserReview.value.uuid,
       finalPayload
     )
-
+    
     if (!result.ok) {
       if (isReasonFailure(result)) {
         if (result.reason === 'UPDATING_REVIEW') return;

@@ -11,6 +11,7 @@ type ReviewWithRelations = Prisma.ReviewGetPayload<{
     },
     restaurant: {
       select: {
+        uuid: true
         name: true
       }
     },
@@ -23,14 +24,14 @@ type ReviewWithRelations = Prisma.ReviewGetPayload<{
 export function toReviewItem(r: ReviewWithRelations) {
   return {
     uuid: r.uuid,
-    restaurantUuid: r.restaurantUuid,
+    restaurantUuid: r.restaurant.uuid,
     restaurantName: r.restaurant.name,
     rating: r.rating,
     content: r.content,
 
     images: r.images.map(img => ({
       uuid: img.uuid,
-      reviewUuid: img.reviewUuid,
+      reviewUuid: r.uuid,
       createdAt: img.createdAt,
       publicId: img.publicId,
     })),
@@ -38,7 +39,7 @@ export function toReviewItem(r: ReviewWithRelations) {
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
 
-    userUuid: r.userUuid,
+    userUuid: r.user.uuid,
     nickname: r.user.nickname,
     userName: r.user.nickname || r.user.username,
 

@@ -10,7 +10,7 @@ export async function countOwnerRestaurants(
 ) {
   return client.restaurant.count({
     where: { 
-      newOwner: { uuid: ownerUuid } 
+      owner: { uuid: ownerUuid } 
      }
   })
 }
@@ -22,8 +22,8 @@ export async function countUnrepliedReviews(
 ) {
   return client.review.count({
     where: {
-      newRestaurant: {
-        newOwner: { uuid: ownerUuid }
+      restaurant: {
+        owner: { uuid: ownerUuid }
       },
       reply: null
     }
@@ -39,8 +39,8 @@ export async function countTodayReviews(
 ) {
   return client.review.count({
     where: {
-      newRestaurant: {
-        newOwner: { uuid: ownerUuid }
+      restaurant: {
+        owner: { uuid: ownerUuid }
       },
       createdAt: {
         gte: startOfToday,
@@ -57,7 +57,7 @@ export async function getAverageRating(
 ) {
   const result = await client.restaurant.aggregate({
     where: {
-      newOwner: { uuid: ownerUuid },
+      owner: { uuid: ownerUuid },
       rating: { not: null }
     },
     _avg: {
@@ -75,14 +75,14 @@ export async function getReplyRate(
 ) {
   const total = await client.review.count({
     where: {
-      newRestaurant: { newOwner: { uuid: ownerUuid } }
+      restaurant: { owner: { uuid: ownerUuid } }
     }
   })
 
   const replied = await client.review.count({
     where: {
-      newRestaurant: { newOwner: { uuid: ownerUuid } },
-      newReply: {
+      restaurant: { owner: { uuid: ownerUuid } },
+      reply: {
         isNot: null
       }
     }
@@ -106,7 +106,8 @@ export async function getReviewTrend(
       COUNT(*) as "count"
     FROM "Review" r
     JOIN "Restaurant" res ON r."restaurantId" = res."id"
-    WHERE res."ownerUuid" = ${ownerUuid}
+    JOIN "User" u ON res."userId" = u."id"
+    WHERE u."uuid" = ${ownerUuid}
     AND EXTRACT(EPOCH FROM r."createdAt") >= ${sinceSec}
     AND EXTRACT(EPOCH FROM r."createdAt") < ${untilSec}
     GROUP BY day_index
@@ -129,7 +130,7 @@ export async function findTopOwnerRestaurantsByBayesian(
 ) {
   const avgResult = await client.restaurant.aggregate({
     where: {
-      newOwner: { uuid: ownerUuid },
+      owner: { uuid: ownerUuid },
       rating: { not: null }
     },
     _avg: {
@@ -154,7 +155,8 @@ export async function findTopOwnerRestaurantsByBayesian(
       r."rating" as "avgRating",
       r."reviewCount" as "reviewCount"
     FROM "Restaurant" r
-    WHERE r."ownerUuid" = ${ownerUuid}
+    JOIN "User" u ON r."userId" = u."id"
+    WHERE u."uuid" = ${ownerUuid}
       AND r."rating" IS NOT NULL
       AND r."reviewCount" > 0
     ORDER BY (
@@ -189,7 +191,8 @@ export async function getReplyTimeStats(
       FROM "Review" r
       JOIN "Restaurant" res ON r."restaurantId" = res."id"
       JOIN "ReviewReply" rr ON rr."reviewId" = r."id"
-      WHERE res."ownerUuid" = ${ownerUuid}
+      JOIN "User" u ON res."userId" = u."id"
+      WHERE u."uuid" = ${ownerUuid}
     )
 
     SELECT

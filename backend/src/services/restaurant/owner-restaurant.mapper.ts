@@ -17,6 +17,18 @@ type RestaurantWithImages =
     }
   }>
 
+type RestaurantDraftWithImagesAndOwner =
+  Prisma.RestaurantDraftGetPayload<{
+    include: {
+      images: true
+      owner: {
+        select: {
+          uuid: true  
+        }
+      }
+    }
+  }>
+
 type RestaurantDraftWithImages =
   Prisma.RestaurantDraftGetPayload<{
     include: {
@@ -157,7 +169,7 @@ export function toOwnerRestaurantListItem(
 }
 
 // 用來處理 raw SQL 查詢結果的，給業者餐廳和審核使用
-export function toRestaurantDraftDetail(row: RestaurantDraftWithImages) {
+export function toRestaurantDraftDetail(row: RestaurantDraftWithImagesAndOwner) {
   const imagesByType: Record<'cover' | 'gallery' | 'menu', ImageGroup[]> = {
     cover: [],
     gallery: [],
@@ -175,7 +187,7 @@ export function toRestaurantDraftDetail(row: RestaurantDraftWithImages) {
   return {
     draftUuid: row.uuid,
     restaurantUuid: row.restaurantUuid,
-    ownerUuid: row.ownerUuid,
+    ownerUuid: row.owner.uuid,
     name: row.name,
     nameEn: row.nameEn,
     category: row.category,

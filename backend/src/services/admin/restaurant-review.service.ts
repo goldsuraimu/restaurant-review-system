@@ -132,7 +132,7 @@ export async function approveRestaurant(draftUuid: string) {
             draft.images.map(img => ({
               uuid: uuidv4(),
 
-              restaurantUuid,
+              restaurantId:publishedRestaurant.id,
 
               type: img.type as RestaurantImageType,
 
@@ -149,10 +149,10 @@ export async function approveRestaurant(draftUuid: string) {
         // 初次建立餐廳
       } else {
 
-        await restaurantRepo.createPublishedRestaurant(
+        const publishedRestaurant = await restaurantRepo.createPublishedRestaurant(
           {
             uuid: restaurantUuid,
-            ownerUuid: draft.ownerUuid,
+            ownerId: draft.userId,
 
             name: draft.name,
             nameEn: draft.nameEn,
@@ -171,7 +171,7 @@ export async function approveRestaurant(draftUuid: string) {
             draft.images.map(img => ({
               uuid: uuidv4(),
 
-              restaurantUuid,
+              restaurantId: publishedRestaurant.id,
 
               type: img.type as RestaurantImageType,
 
@@ -305,7 +305,7 @@ export async function getRestaurantDetail(uuid: string) {
 
   try {
 
-    const restaurantDraft = await restaurantDraftRepo.findByDraftUuid(uuid)
+    const restaurantDraft = await restaurantDraftRepo.findByDraftUuidWithOwner(uuid)
 
     if (!restaurantDraft) {
       throw new ApiError('找不到餐廳草稿', {

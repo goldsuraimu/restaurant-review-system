@@ -6,6 +6,7 @@ import { Prisma } from '@prisma/client'
 import { ApiError } from '#/utils/api-error'
 import { withPrismaTransaction } from '#/utils/prisma-transaction'
 import { handleServiceError } from '#/utils/service-error'
+import { formatNumber } from '#/utils/number'
 import { validateReviewRating, validateReviewContent } from '#/validators/review.validator'
 import { toReviewItem } from '#/services/review/review.mapper'
 import { deleteCloudFolder, deleteCloudinaryImages } from '#/services/upload/upload.service'
@@ -71,7 +72,7 @@ export async function createReview(
 
     const restaurant = await checkRestaurantExists(restaurantUuid)
 
-    if (restaurant.ownerUuid === userUuid) {
+    if (restaurant.owner.uuid === userUuid) {
       throw new ApiError('不能評論自己的餐廳', {
         status: 403,
         code: 'CANNOT_REVIEW_OWN_RESTAURANT'
@@ -82,7 +83,7 @@ export async function createReview(
 
     // 建立評論
     const result = await withPrismaTransaction(async tx => {
-      await reviewRepo.createReview({
+      const review = await reviewRepo.createReview({
         uuid: reviewUuid,
         rating: parsedRating,
         content,
@@ -94,12 +95,12 @@ export async function createReview(
       if (reviewImages.length) {
         const imagesToCreate: {
           uuid: string
-          reviewUuid: string
+          reviewId: number
           url: string
           publicId: string
         }[] = reviewImages.map(img => ({
           uuid: uuidv4(),
-          reviewUuid,
+          reviewId: review.id,
           url: img.url,
           publicId: img.publicId,
         }))
@@ -135,7 +136,7 @@ export async function createReview(
     return {
       review: toReviewItem(review),
       restaurantRating: {
-        rating: result.updatedRestaurant.rating,
+        rating: formatNumber(result.updatedRestaurant.rating, 1),
         ratingCount: result.updatedRestaurant.ratingCount,
         reviewCount: result.updatedRestaurant.reviewCount,
       }
@@ -170,7 +171,7 @@ export async function updateReview(
     // 確保評論存在且屬於該使用者，沒有的話會丟錯誤
     const review = await checkReviewExists(reviewUuid, userUuid)
 
-    const restaurantUuid = review.restaurantUuid
+    const restaurantUuid = review.restaurant.uuid
 
     const result = await withPrismaTransaction(async tx => {
       // #region 如果評分有變動，才調整餐廳的 ratingSum
@@ -223,7 +224,7 @@ export async function updateReview(
       if (newImages?.length) {
         const imagesToCreate = newImages.map(img => ({
           uuid: uuidv4(),         // 新增每張圖片的 uuid
-          reviewUuid,             // 對應到該評論
+          reviewId: review.id,             // 對應到該評論
           url: img.url,           // 圖片網址
           publicId: img.publicId, // Cloudinary publicId
         }))
@@ -244,7 +245,11 @@ export async function updateReview(
 
     return {
       review: toReviewItem(updatedReview),
-      restaurantRating: result.updatedRestaurant
+      restaurantRating: {
+        rating: formatNumber(result.updatedRestaurant.rating, 1),
+        ratingCount: result.updatedRestaurant.ratingCount,
+        reviewCount: result.updatedRestaurant.reviewCount,
+      }
     }
   } catch (err) {
     // 捕捉 Prisma 已知錯誤（例如 transaction 失敗）
@@ -272,7 +277,7 @@ export async function deleteReview(
     // 確保評論存在且屬於該使用者，沒有的話會丟錯誤
     const review = await checkReviewExists(reviewUuid, userUuid)
 
-    const restaurantUuid = review.restaurantUuid
+    const restaurantUuid = review.restaurant.uuid
 
     const result = await withPrismaTransaction(async tx => {
 
@@ -303,7 +308,7 @@ export async function deleteReview(
 
     return {
       restaurantRating: {
-        rating: result.updatedRestaurant.rating,
+        rating: formatNumber(result.updatedRestaurant.rating, 1),
         ratingCount: result.updatedRestaurant.ratingCount,
         reviewCount: result.updatedRestaurant.reviewCount,
       }

@@ -134,7 +134,7 @@ export async function loginUser(email: string, password: string) {
 
     await refreshTokenRepo.insert({
       id: jti,
-      userUuid: user.uuid,
+      userId: user.id,
       expiresAt,
     })
 
@@ -206,7 +206,7 @@ export async function refreshUserToken(token: string) {
 
     await refreshTokenRepo.insert({
       id: newJti,
-      userUuid: payload.sub,
+      userId: user.id,
       expiresAt: now + 7 * 24 * 3600,
     })
 

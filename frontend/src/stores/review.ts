@@ -198,7 +198,7 @@ export const useReviewStore = defineStore('review', () => {
 
     try {
       const result = await updateReviewApi(restaurantUuid, reviewUuid, payload);
-
+      
       if (!result.ok) {
         return {
           ok: false,

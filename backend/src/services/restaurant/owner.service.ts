@@ -72,8 +72,11 @@ type RestaurantImageInput = {
 }
 
 type DraftLite = {
+  id: number
   uuid: string
-  ownerUuid: string
+  owner?: {
+    uuid: string
+  }
 }
 
 type ImageDraftLite = {
@@ -165,7 +168,7 @@ export async function createOwnerRestaurant({
 
       const restaurantDraftUuid = uuidv4()
       // 先建立草稿，再由後續流程審核後轉正式餐廳
-      await restaurantDraftRepo.createDraft(
+      const restaurantDraft = await restaurantDraftRepo.createDraft(
         {
           uuid: restaurantDraftUuid,
           ownerUuid,
@@ -188,7 +191,7 @@ export async function createOwnerRestaurant({
       const imagesToCreate = imageList.map(img => ({
         uuid: uuidv4(),     // 新增每張圖片的 uuid
 
-        restaurantDraftUuid,  // 對應到該草稿
+        restaurantDraftId: restaurantDraft.id,  // 對應到該草稿
 
         type: img.type,     // 圖片類型
 
@@ -464,11 +467,11 @@ export async function getOwnerRestaurantDetail({
 }) {
   try {
     const draft =
-      await restaurantDraftRepo.findByRestaurantUuid(restaurantUuid)
+      await restaurantDraftRepo.findByRestaurantUuidWithOwner(restaurantUuid)
 
     if (draft) {
 
-      if (draft.ownerUuid !== ownerUuid) {
+      if (draft.owner.uuid !== ownerUuid) {
 
         throw new ApiError('無權限', {
           status: 403,
@@ -481,7 +484,7 @@ export async function getOwnerRestaurantDetail({
 
     // 如果草稿不存在，則查正式餐廳
     const restaurant =
-      await restaurantRepo.findByUUID(restaurantUuid)
+      await restaurantRepo.findByUUIDWithOwner(restaurantUuid)
 
     if (!restaurant) {
 
@@ -491,7 +494,7 @@ export async function getOwnerRestaurantDetail({
       })
     }
 
-    if (restaurant.ownerUuid !== ownerUuid) {
+    if (restaurant.owner.uuid !== ownerUuid) {
 
       throw new ApiError('無權限', {
         status: 403,
@@ -555,7 +558,7 @@ export async function updateOwnerRestaurant({
 
       // 查正式餐廳
       const restaurant =
-        await restaurantRepo.findByUUID(
+        await restaurantRepo.findByUUIDWithOwner(
           uuid,
           tx
         )
@@ -565,7 +568,7 @@ export async function updateOwnerRestaurant({
       // 正式餐廳編輯
       if (restaurant) {
 
-        if (restaurant.ownerUuid !== ownerUuid) {
+        if (restaurant.owner.uuid !== ownerUuid) {
           throw new ApiError('無權限', {
             status: 403,
             code: 'FORBIDDEN',
@@ -624,7 +627,7 @@ export async function updateOwnerRestaurant({
               restaurant.images.map(img => ({
                 uuid: uuidv4(),
 
-                restaurantDraftUuid: finalDraft.uuid,  // 對應到該草稿
+                restaurantDraftId: finalDraft.id,  // 對應到該草稿
 
                 type: img.type as RestaurantImageType,
 
@@ -663,7 +666,7 @@ export async function updateOwnerRestaurant({
       else {
 
         draft =
-          await restaurantDraftRepo.findByRestaurantUuid(
+          await restaurantDraftRepo.findByRestaurantUuidWithOwner(
             uuid,
             tx
           )
@@ -676,7 +679,7 @@ export async function updateOwnerRestaurant({
           })
         }
 
-        if (draft.ownerUuid !== ownerUuid) {
+        if (draft.owner!.uuid !== ownerUuid) {
 
           throw new ApiError('無權限', {
             status: 403,
@@ -839,7 +842,7 @@ export async function updateOwnerRestaurant({
           newImages.map(img => ({
             uuid: uuidv4(),
 
-            restaurantDraftUuid: draft.uuid,
+            restaurantDraftId: draft.id,
 
             type: img.type,
 
@@ -914,13 +917,13 @@ export async function deleteOwnerRestaurant({
     const result = await withPrismaTransaction(async tx => {
 
       const restaurant =
-        await restaurantRepo.findByUUID(
+        await restaurantRepo.findByUUIDWithOwner(
           restaurantUuid,
           tx
         )
 
       const draft =
-        await restaurantDraftRepo.findByRestaurantUuid(
+        await restaurantDraftRepo.findByRestaurantUuidWithOwner(
           restaurantUuid,
           tx
         )
@@ -939,7 +942,7 @@ export async function deleteOwnerRestaurant({
           })
         }
 
-        if (restaurant.ownerUuid !== ownerUuid) {
+        if (restaurant.owner.uuid !== ownerUuid) {
           throw new ApiError('無權限', {
             status: 403,
             code: 'FORBIDDEN',
@@ -970,7 +973,7 @@ export async function deleteOwnerRestaurant({
         })
       }
 
-      if (draft.ownerUuid !== ownerUuid) {
+      if (draft.owner.uuid !== ownerUuid) {
 
         throw new ApiError('無權限', {
           status: 403,

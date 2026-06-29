@@ -3,9 +3,23 @@ import { formatNumber } from '#/utils/number'
 import type { Prisma } from '@prisma/client'
 import type { RestaurantWithScoreRow } from '#/repositories/restaurant/restaurant-search.raw'
 
-type RestaurantWithImages = Prisma.RestaurantGetPayload<{
-  include: { images: true }
+type RestaurantWithImagesandOwner = Prisma.RestaurantGetPayload<{
+  include: { 
+    images: true 
+    owner: {
+      select: {
+        uuid: true  
+      }
+    }
+  }
 }>
+
+type RestaurantWithImages = Prisma.RestaurantGetPayload<{
+  include: {
+    images: true
+  }
+}>
+
 
 type ImageGroup = {
   uuid: string
@@ -80,7 +94,7 @@ export function toRestaurantListItemFromRaw(row: RestaurantWithScoreRow) {
   }
 }
 
-export function toRestaurantDetail(row: RestaurantWithImages) {
+export function toRestaurantDetail(row: RestaurantWithImagesandOwner) {
   const imagesByType: Record<'cover' | 'gallery' | 'menu', ImageGroup[]> = {
     cover: [],
     gallery: [],
@@ -97,7 +111,7 @@ export function toRestaurantDetail(row: RestaurantWithImages) {
 
   return {
     uuid: row.uuid,
-    ownerUuid: row.ownerUuid,
+    ownerUuid: row.owner.uuid,
     name: row.name,
     nameEn: row.nameEn,
     category: row.category,

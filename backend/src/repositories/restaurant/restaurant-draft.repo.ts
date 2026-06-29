@@ -33,6 +33,27 @@ export async function findByRestaurantUuid(
 }
 // #endregion
 
+// #region 查詢 draft （依正式餐廳 uuid，包含業者資料）
+export async function findByRestaurantUuidWithOwner(
+  restaurantUuid: string,
+  client: DBClient = prisma
+) {
+  return client.restaurantDraft.findUnique({
+    where: {
+      restaurantUuid,
+    },
+    include: {
+      images: true,
+      owner: {
+        select: {
+          uuid: true,
+        }
+      }
+    },
+  })
+}
+// #endregion
+
 // 取得待審核餐廳列表（審核用）
 export async function findPendingRestaurants({
   page,
@@ -97,6 +118,25 @@ export async function findByDraftUuid(
 }
 // #endregion
 
+// #region 查詢 draft（依 draft uuid，包含業者資料）
+export async function findByDraftUuidWithOwner(
+  uuid: string,
+  client: DBClient = prisma
+) {
+  return client.restaurantDraft.findUnique({
+    where: { uuid },
+    include: {
+      images: true,
+      owner: {
+        select: {
+          uuid: true,
+        }
+      }
+    },
+  })
+}
+// #endregion
+
 // #region 建立 draft
 export async function createDraft(
   data: {
@@ -133,9 +173,6 @@ export async function createDraft(
       owner: {
         connect: { uuid: data.ownerUuid }
       },
-      newOwner: {
-        connect: { uuid: data.ownerUuid }
-      }
     },
   })
 }

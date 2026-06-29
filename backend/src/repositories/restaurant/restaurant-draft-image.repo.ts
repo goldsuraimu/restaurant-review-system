@@ -10,7 +10,7 @@ import {
 export interface InsertRestaurantDraftImageDto {
   uuid: string
 
-  restaurantDraftUuid: string
+  restaurantDraftId: number
 
   type: RestaurantImageType
 
@@ -31,7 +31,7 @@ export async function findByDraftUuid(
 ) {
   const rows = await client.restaurantDraftImage.findMany({
     where: {
-      newRestaurantDraft: { uuid: restaurantDraftUuid },
+      restaurantDraft: { uuid: restaurantDraftUuid },
     },
     orderBy: {
       sortOrder: 'asc',
@@ -53,19 +53,10 @@ export async function insertImage(
   data: InsertRestaurantDraftImageDto,
   client: DBClient = prisma
 ) {
-
-  const { restaurantDraftUuid, ...rest } = data;
-
   return client.restaurantDraftImage.create({
     data: {
-      ...rest,
+      ...data,
       sourceType: data.sourceType ?? 'DRAFT_UPLOAD',
-      restaurantDraft: {
-        connect: { uuid: restaurantDraftUuid }
-      },
-      newRestaurantDraft: {
-        connect: { uuid: restaurantDraftUuid }
-      },
     },
   })
 }

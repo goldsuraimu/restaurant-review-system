@@ -6,11 +6,11 @@ import type { DBClient } from '#/types/database'
 // 新增 refresh token
 export async function insert({
   id,
-  userUuid,
+  userId,
   expiresAt,
 }: {
   id: string;
-  userUuid: string;
+  userId: number;
   expiresAt: number;
 },
   client: DBClient = prisma
@@ -19,12 +19,7 @@ export async function insert({
     data: {
       id,
       expiresAt,
-      user: {
-        connect: { uuid: userUuid }
-      },
-      newUser: {
-        connect: { uuid: userUuid }
-      }
+      userId
     },
   });
 }

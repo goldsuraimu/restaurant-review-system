@@ -5,7 +5,7 @@ import { DBClient } from '#/types/database'
 
 // #region 檢查餐廳是否存在（供其他 service 呼叫）
 export async function checkRestaurantExists(uuid: string, tx?: DBClient) {
-  const restaurant = await restaurantRepo.findByUUID(uuid, tx)
+  const restaurant = await restaurantRepo.findByUUIDWithOwner(uuid, tx)
   if (!restaurant) {
     throw new ApiError('找不到餐廳', {
       status: 404,

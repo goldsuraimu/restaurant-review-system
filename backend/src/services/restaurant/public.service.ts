@@ -81,7 +81,7 @@ export async function listRestaurants(query: ListRestaurantsQuery) {
 // #region 取得單一餐廳
 export async function getRestaurantByUuid(restaurantUuid: string) {
   try {
-    const restaurant = await restaurantRepo.findByUUID(restaurantUuid)
+    const restaurant = await restaurantRepo.findByUUIDWithOwner(restaurantUuid)
 
     if (!restaurant) {
       throw new ApiError('找不到餐廳', {

@@ -44,7 +44,7 @@ export async function getOwnerReviews(
       case 'RESTAURANT':
         const restaurant = await checkRestaurantExists(scope.restaurantUuid)
 
-        if (restaurant.ownerUuid !== ownerUuid) {
+        if (restaurant.owner.uuid !== ownerUuid) {
           throw new ApiError('無權限查看此餐廳評論', {
             status: 403,
             code: 'FORBIDDEN'

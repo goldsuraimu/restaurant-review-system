@@ -19,7 +19,7 @@ export async function checkReviewExists(
   }
 
   // 如果提供 userUuid，做權限檢查
-  if (userUuid && review.userUuid !== userUuid) {
+  if (userUuid && review.user.uuid !== userUuid) {
     throw new ApiError('無權限', {
       status: 403,
       code: 'FORBIDDEN',
@@ -38,9 +38,9 @@ export async function checkOwnerReviewPermission(
     await checkReviewExists(reviewUuid)
 
   const restaurant =
-    await checkRestaurantExists(review.restaurantUuid)
+    await checkRestaurantExists(review.restaurant.uuid)
 
-  if (restaurant.ownerUuid !== ownerUuid) {
+  if (restaurant.owner.uuid !== ownerUuid) {
     throw new ApiError('無權限', {
       status: 403,
       code: 'FORBIDDEN'
@@ -48,5 +48,4 @@ export async function checkOwnerReviewPermission(
   }
 
   return review
-
 }

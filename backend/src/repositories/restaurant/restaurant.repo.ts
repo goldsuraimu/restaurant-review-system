@@ -85,6 +85,24 @@ export async function findByUUID(
 }
 // #endregion
 
+// #region依照 UUID 取得餐廳（包含圖片、業者）
+export async function findByUUIDWithOwner(
+  uuid: string,
+  client: DBClient = prisma
+) {
+  return client.restaurant.findUnique({
+    where: { uuid },
+    include: { 
+      images: true,
+      owner: {
+        select: {
+          uuid: true,
+        }
+      }
+    },
+  })
+}
+// #endregion
 
 // #region 計算業者餐廳排名（Bayesian 平均）
 export async function findOwnerRestaurantRankings(
@@ -104,7 +122,7 @@ export async function findOwnerRestaurantRankings(
   // 先算全部平均 C
   const avgResult = await client.restaurant.aggregate({
     where: {
-      newOwner: { uuid: ownerUuid },
+      owner: { uuid: ownerUuid },
       rating: { not: null }
     },
     _avg: {
@@ -136,7 +154,8 @@ export async function findOwnerRestaurantRankings(
           (${m} * 1.0 / (r."reviewCount" + ${m})) * ${C}
         ) as score
       FROM "Restaurant" r
-      WHERE r."ownerUuid" = ${ownerUuid}
+      JOIN "User" u ON r."userId" = u."id"
+      WHERE u."uuid" = ${ownerUuid}
         AND r.rating IS NOT NULL
         AND r."reviewCount" > 0
     )
@@ -160,7 +179,7 @@ export async function findOwnerRestaurantRankings(
 
   const total = await client.restaurant.count({
     where: {
-      newOwner: { uuid: ownerUuid },
+      owner: { uuid: ownerUuid },
       rating: { not: null },
       reviewCount: { gt: 0 }
     }
@@ -175,7 +194,7 @@ export async function findOwnerRestaurantRankings(
 export async function createPublishedRestaurant(
   data: {
     uuid: string
-    ownerUuid: string
+    ownerId: number
 
     name: string
     nameEn?: string | null
@@ -186,17 +205,12 @@ export async function createPublishedRestaurant(
   },
   client: DBClient = prisma
 ) {
-  const { ownerUuid, ...rest } = data;
+  const { ownerId, ...rest } = data;
 
   return client.restaurant.create({
     data: {
       ...rest,
-      owner: {
-        connect: { uuid: ownerUuid }
-      },
-      newOwner: {
-        connect: { uuid: ownerUuid }
-      }
+      userId: ownerId
     }
   })
 }
