@@ -81,7 +81,7 @@ export async function findRestaurantListWithRelevance(
   const rows = await client.$queryRaw<RestaurantWithScoreRow[]>`
     WITH ranked_restaurants AS (
       SELECT
-        r."id", r."uuid", r."name", r."nameEn", r."category", rs."rating", r."ratingCount", r."reviewCount", r."createdAt",
+        r."id", r."uuid", r."name", r."nameEn", r."category", rs."rating", rs."ratingCount", rs."reviewCount", r."createdAt",
         (${finalScoreSql}) AS "score",
         ( 
           (${finalScoreSql}) * 0.6 

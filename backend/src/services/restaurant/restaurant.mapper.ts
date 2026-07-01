@@ -5,6 +5,7 @@ import type { RestaurantWithScoreRow } from '#/repositories/restaurant/restauran
 
 type RestaurantWithImagesandOwner = Prisma.RestaurantGetPayload<{
   include: { 
+    stats: true
     images: true 
     owner: {
       select: {
@@ -16,6 +17,7 @@ type RestaurantWithImagesandOwner = Prisma.RestaurantGetPayload<{
 
 type RestaurantWithImages = Prisma.RestaurantGetPayload<{
   include: {
+    stats: true
     images: true
   }
 }>
@@ -55,9 +57,9 @@ export function toPublicRestaurantListItemFromPrisma(
     name: row.name,
     nameEn: row.nameEn,
     category: row.category,
-    rating: formatNumber(row.rating, 1),
-    ratingCount: row.ratingCount,
-    reviewCount: row.reviewCount,
+    rating: formatNumber(row.stats?.rating ?? 0, 1),
+    ratingCount: row.stats?.ratingCount ?? 0,
+    reviewCount: row.stats?.reviewCount ?? 0,
     coverImage: cover
       ? {
         uuid: cover.uuid,
@@ -118,9 +120,9 @@ export function toRestaurantDetail(row: RestaurantWithImagesandOwner) {
     location: row.location,
     description: row.description,
     phone: row.phone,
-    rating: formatNumber(row.rating, 1),
-    ratingCount: row.ratingCount,
-    reviewCount: row.reviewCount,
+    rating: formatNumber(row.stats?.rating ?? 0, 1),
+    ratingCount: row.stats?.ratingCount ?? 0,
+    reviewCount: row.stats?.reviewCount ?? 0,
     images: imagesByType,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? null,
