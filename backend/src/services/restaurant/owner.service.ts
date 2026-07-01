@@ -950,7 +950,7 @@ export async function deleteOwnerRestaurant({
         }
 
         await restaurantRepo.deleteRestaurant(
-          restaurant.uuid,
+          restaurant.id,
           tx
         )
 

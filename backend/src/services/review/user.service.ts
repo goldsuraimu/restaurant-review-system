@@ -70,19 +70,20 @@ export async function createReview(
     const parsedRating = validateReviewRating(rating)
     validateReviewContent(content)
 
-    const restaurant = await checkRestaurantExists(restaurantUuid)
-
-    if (restaurant.owner.uuid === userUuid) {
-      throw new ApiError('不能評論自己的餐廳', {
-        status: 403,
-        code: 'CANNOT_REVIEW_OWN_RESTAURANT'
-      })
-    }
-
-    const reviewImages = reviewImagesInput ?? []
-
     // 建立評論
     const result = await withPrismaTransaction(async tx => {
+
+      const restaurant = await checkRestaurantExists(restaurantUuid, tx)
+
+      if (restaurant.owner.uuid === userUuid) {
+        throw new ApiError('不能評論自己的餐廳', {
+          status: 403,
+          code: 'CANNOT_REVIEW_OWN_RESTAURANT'
+        })
+      }
+
+      const reviewImages = reviewImagesInput ?? []
+
       const review = await reviewRepo.createReview({
         uuid: reviewUuid,
         rating: parsedRating,
@@ -109,21 +110,21 @@ export async function createReview(
       }
 
       // #region 新增評論後，更新餐廳的 ratingSum 和 reviewCount  
-      const restaurant = await restaurantRepo.incrementRestaurantRating(
-        restaurantUuid,
+      const restaurantStats = await restaurantRepo.incrementRestaurantRating(
+        restaurant.id,
         parsedRating,
         tx
       )
 
       const finalRating = calculateFinalRating(
-        restaurant.ratingSum,
-        restaurant.reviewCount
+        restaurantStats.ratingSum,
+        restaurantStats.reviewCount
       )
 
       const updatedRestaurant = await restaurantRepo.updateRestaurantRatingFinal(
-        restaurantUuid,
+        restaurant.id,
         finalRating,
-        restaurant.reviewCount,
+        restaurantStats.reviewCount,
         tx
       )
 
@@ -168,38 +169,39 @@ export async function updateReview(
     const parsedRating = validateReviewRating(rating)
     validateReviewContent(content)
 
-    // 確保評論存在且屬於該使用者，沒有的話會丟錯誤
-    const review = await checkReviewExists(reviewUuid, userUuid)
-
-    const restaurantUuid = review.restaurant.uuid
-
     const result = await withPrismaTransaction(async tx => {
+
+      // 確保評論存在且屬於該使用者，沒有的話會丟錯誤
+      const review = await checkReviewExists(reviewUuid, userUuid, tx)
+
+      const restaurant = await checkRestaurantExists(review.restaurant.uuid, tx)
+
       // #region 如果評分有變動，才調整餐廳的 ratingSum
       let updatedRestaurant: any = null
       if (review.rating !== parsedRating) {
         const diff = calculateRatingDiff(review.rating, parsedRating)
 
-        const restaurant = await restaurantRepo.adjustRestaurantRatingSum(
-          restaurantUuid,
+        const restaurantStats = await restaurantRepo.adjustRestaurantRatingSum(
+          restaurant.id,
           diff,
           tx
         )
 
         const finalRating = calculateFinalRating(
-          restaurant.ratingSum,
-          restaurant.reviewCount
+          restaurantStats.ratingSum,
+          restaurantStats.reviewCount
         )
 
         updatedRestaurant = await restaurantRepo.updateRestaurantRatingFinal(
-          restaurantUuid,
+          restaurant.id,
           finalRating,
-          restaurant.reviewCount,
+          restaurantStats.reviewCount,
           tx
         )
       } else {
         // 評分沒變 → 只拿最新 rating 資訊
         updatedRestaurant = await restaurantRepo.getRatingInfoByUuid(
-          restaurantUuid,
+          restaurant.id,
           tx
         );
       }
@@ -274,36 +276,36 @@ export async function deleteReview(
   userUuid: string
 ) {
   try {
-    // 確保評論存在且屬於該使用者，沒有的話會丟錯誤
-    const review = await checkReviewExists(reviewUuid, userUuid)
-
-    const restaurantUuid = review.restaurant.uuid
-
     const result = await withPrismaTransaction(async tx => {
+
+      // 確保評論存在且屬於該使用者，沒有的話會丟錯誤
+      const review = await checkReviewExists(reviewUuid, userUuid, tx)
+
+      const restaurant = await checkRestaurantExists(review.restaurant.uuid, tx)
 
       await reviewRepo.deleteReview(reviewUuid, tx)
 
-      const restaurant = await restaurantRepo.decrementRestaurantRating(
-        restaurantUuid,
+      const restaurantStats = await restaurantRepo.decrementRestaurantRating(
+        restaurant.id,
         review.rating,
         tx
       )
 
       const finalRating = calculateFinalRating(
-        restaurant.ratingSum,
-        restaurant.reviewCount
+        restaurantStats.ratingSum,
+        restaurantStats.reviewCount
       )
 
       const updatedRestaurant = await restaurantRepo.updateRestaurantRatingFinal(
-        restaurantUuid,
+        restaurant.id,
         finalRating,
-        restaurant.reviewCount,
+        restaurantStats.reviewCount,
         tx
       )
-      return { updatedRestaurant }
+      return { restaurantUuid: restaurant.uuid, updatedRestaurant }
     })
 
-    const folderPath = `uploads/restaurants-images/${restaurantUuid}/reviews/${reviewUuid}`
+    const folderPath = `uploads/restaurants-images/${result.restaurantUuid}/reviews/${reviewUuid}`
     deleteCloudFolder(folderPath)
 
     return {

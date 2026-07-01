@@ -81,14 +81,19 @@ export async function findRestaurantListWithRelevance(
   const rows = await client.$queryRaw<RestaurantWithScoreRow[]>`
     WITH ranked_restaurants AS (
       SELECT
-        r."id", r."uuid", r."name", r."nameEn", r."category", r."rating", r."ratingCount", r."reviewCount", r."createdAt",
+        r."id", r."uuid", r."name", r."nameEn", r."category", rs."rating", r."ratingCount", r."reviewCount", r."createdAt",
         (${finalScoreSql}) AS "score",
         ( 
           (${finalScoreSql}) * 0.6 
-          + COALESCE(r."rating", 0) * 0.3 
-          + CASE WHEN COALESCE(r."reviewCount", 0) > 100 THEN 10 ELSE (COALESCE(r."reviewCount", 0) / 10.0) END * 0.1 
+          + COALESCE(rs."rating", 0) * 0.3 
+          + CASE 
+              WHEN COALESCE(rs."reviewCount", 0) > 100 
+              THEN 10 ELSE (COALESCE(rs."reviewCount", 0) / 10.0) 
+            END * 0.1
         ) AS "final_rank"
       FROM "Restaurant" r
+      LEFT JOIN "RestaurantStats" rs
+      ON rs."restaurantId" = r."id"
       WHERE ${finalWhereSql}
       ORDER BY "final_rank" DESC
       LIMIT ${limit} OFFSET ${offset}

@@ -55,10 +55,16 @@ export async function getAverageRating(
   ownerUuid: string,
   client: DBClient = prisma
 ) {
-  const result = await client.restaurant.aggregate({
+  const result = await client.restaurantStats.aggregate({
     where: {
-      owner: { uuid: ownerUuid },
-      rating: { not: null }
+      rating: {
+        not: null
+      },
+      restaurant: {
+        owner: {
+          uuid: ownerUuid
+        }
+      }
     },
     _avg: {
       rating: true
@@ -128,10 +134,16 @@ export async function findTopOwnerRestaurantsByBayesian(
   limit = 5,
   client: DBClient = prisma
 ) {
-  const avgResult = await client.restaurant.aggregate({
+  const avgResult = await client.restaurantStats.aggregate({
     where: {
-      owner: { uuid: ownerUuid },
-      rating: { not: null }
+      rating: {
+        not: null
+      },
+      restaurant: {
+        owner: {
+          uuid: ownerUuid
+        }
+      }
     },
     _avg: {
       rating: true
@@ -152,16 +164,18 @@ export async function findTopOwnerRestaurantsByBayesian(
     SELECT
       r."uuid" as "restaurantUuid",
       r."name" as "restaurantName",
-      r."rating" as "avgRating",
-      r."reviewCount" as "reviewCount"
-    FROM "Restaurant" r
+      rs."rating" as "avgRating",
+      rs."reviewCount" as "reviewCount"
+    FROM "RestaurantStats" rs
+    JOIN "Restaurant" r
+      ON rs."restaurantId" = r."id"
     JOIN "User" u ON r."userId" = u."id"
     WHERE u."uuid" = ${ownerUuid}
-      AND r."rating" IS NOT NULL
-      AND r."reviewCount" > 0
+      AND rs."rating" IS NOT NULL
+      AND rs."reviewCount" > 0
     ORDER BY (
-      (r."reviewCount" * 1.0 / (r."reviewCount" + ${m})) * r."rating" +
-      (${m} * 1.0 / (r."reviewCount" + ${m})) * ${C}
+      (rs."reviewCount" * 1.0 / (rs."reviewCount" + ${m})) * rs."rating" +
+      (${m} * 1.0 / (rs."reviewCount" + ${m})) * ${C}
     ) DESC
     LIMIT ${limit}
   `

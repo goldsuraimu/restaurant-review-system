@@ -45,14 +45,33 @@ export async function findSimpleList({
 
   const total = await client.restaurant.count({ where })
 
-  const orderBy: Prisma.RestaurantOrderByWithRelationInput[] = [
-    sortColumn === 'rating'
-      ? { rating: { sort: sortOrder, nulls: 'last' } }
-      : { [sortColumn]: sortOrder }
-  ]
+  const orderBy: Prisma.RestaurantOrderByWithRelationInput[] = []
 
-  if (sortColumn !== 'rating') orderBy.push({ rating: 'desc' })
-  if (sortColumn !== 'reviewCount') orderBy.push({ reviewCount: 'desc' })
+  if (sortColumn === 'createdAt') {
+    orderBy.push({ createdAt: sortOrder })
+  } else {
+    orderBy.push({
+      stats: {
+        [sortColumn]: sortOrder
+      }
+    })
+  }
+
+  if (sortColumn !== 'rating') {
+    orderBy.push({
+      stats: {
+        rating: 'desc'
+      }
+    })
+  }
+
+  if (sortColumn !== 'reviewCount') {
+    orderBy.push({
+      stats: {
+        reviewCount: 'desc'
+      }
+    })
+  }
 
   const rows = await client.restaurant.findMany({
     where,
@@ -60,6 +79,7 @@ export async function findSimpleList({
     take: limit,
     orderBy,
     include: {
+      stats: true,
       images: {
         where: { type: 'cover' },
         take: 1,
@@ -93,6 +113,7 @@ export async function findByUUIDWithOwner(
   return client.restaurant.findUnique({
     where: { uuid },
     include: { 
+      stats: true,
       images: true,
       owner: {
         select: {
@@ -120,10 +141,16 @@ export async function findOwnerRestaurantRankings(
   const skip = (page - 1) * limit
 
   // 先算全部平均 C
-  const avgResult = await client.restaurant.aggregate({
+  const avgResult = await client.restaurantStats.aggregate({
     where: {
-      owner: { uuid: ownerUuid },
-      rating: { not: null }
+      restaurant: {
+        owner: {
+          uuid: ownerUuid
+        }
+      },
+      rating: {
+        not: null
+      }
     },
     _avg: {
       rating: true
@@ -147,17 +174,19 @@ export async function findOwnerRestaurantRankings(
       SELECT
         r.uuid as "restaurantUuid",
         r.name as "restaurantName",
-        r.rating as "avgRating",
-        r."reviewCount" as "reviewCount",
+        rs.rating as "avgRating",
+        rs."reviewCount" as "reviewCount",
         (
-          (r."reviewCount" * 1.0 / (r."reviewCount" + ${m})) * r.rating +
-          (${m} * 1.0 / (r."reviewCount" + ${m})) * ${C}
+          (rs."reviewCount" * 1.0 / (rs."reviewCount" + ${m})) * rs.rating +
+          (${m} * 1.0 / (rs."reviewCount" + ${m})) * ${C}
         ) as score
       FROM "Restaurant" r
+      JOIN "RestaurantStats" rs
+      ON rs."restaurantId"=r."id"
       JOIN "User" u ON r."userId" = u."id"
       WHERE u."uuid" = ${ownerUuid}
-        AND r.rating IS NOT NULL
-        AND r."reviewCount" > 0
+        AND rs.rating IS NOT NULL
+        AND rs."reviewCount" > 0
     )
     SELECT
       "restaurantUuid",
@@ -177,11 +206,19 @@ export async function findOwnerRestaurantRankings(
     rank: Number(r.rank)
   }))
 
-  const total = await client.restaurant.count({
+  const total = await client.restaurantStats.count({
     where: {
-      owner: { uuid: ownerUuid },
-      rating: { not: null },
-      reviewCount: { gt: 0 }
+      restaurant: {
+        owner: {
+          uuid: ownerUuid
+        }
+      },
+      rating: {
+        not: null
+      },
+      reviewCount: {
+        gt: 0
+      }
     }
   })
 
@@ -210,7 +247,11 @@ export async function createPublishedRestaurant(
   return client.restaurant.create({
     data: {
       ...rest,
-      userId: ownerId
+      userId: ownerId,
+
+      stats: {
+        create: {}   // 這裡會自動建立一個 RestaurantStats 的空紀錄，ratingSum、ratingCount、reviewCount 都會預設為 0
+      }
     }
   })
 }
@@ -242,81 +283,97 @@ export async function updatePublishedRestaurant(
 
 // #region 刪除餐廳
 export async function deleteRestaurant(
-  uuid: string,
+  restaurantId: number,
   client: DBClient = prisma
 ) {
   return client.restaurant.delete({
-    where: { uuid },
+    where: { id: restaurantId },
   })
 }
 // #endregion
 
 // #region 評論增加後更新餐廳的 rating 和 ratingCount
 export async function incrementRestaurantRating(
-  restaurantUuid: string,
+  restaurantId: number,
   rating: number,
   client: DBClient = prisma
 ) {
-  return client.restaurant.update({
-    where: { uuid: restaurantUuid },
-    data: {
-      ratingSum: { increment: rating },
-      reviewCount: { increment: 1 },
+  return client.restaurantStats.update({
+    where: {
+      restaurantId
     },
+    data: {
+      ratingSum: {
+        increment: rating
+      },
+      reviewCount: {
+        increment: 1
+      }
+    }
   })
 }
 // #endregion
 
 // #region 評論刪除後更新餐廳的 rating 和 ratingCount
 export async function decrementRestaurantRating(
-  restaurantUuid: string,
+  restaurantId: number,
   rating: number,
   client: DBClient = prisma
 ) {
-  return client.restaurant.update({
-    where: { uuid: restaurantUuid },
-    data: {
-      ratingSum: { decrement: rating },
-      reviewCount: { decrement: 1 },
+  return client.restaurantStats.update({
+    where: {
+      restaurantId
     },
+    data: {
+      ratingSum: {
+        decrement: rating
+      },
+      reviewCount: { 
+        decrement: 1 
+      }
+    }
   })
 }
 // #endregion
 
 // #region 取得餐廳的評分資訊
 export async function getRatingInfoByUuid(
-  restaurantUuid: string,
+  restaurantId: number,
   client: DBClient = prisma
 ) {
-  return client.restaurant.findUnique({
-    where: { uuid: restaurantUuid },
+  return client.restaurantStats.findUnique({
+    where: {
+      restaurantId
+    },
     select: {
       rating: true,
       ratingCount: true,
       reviewCount: true,
     },
-  });
+  })
 }
 // #endregion
 
 // #region 最終更新餐廳的 rating 和 ratingCount
 export async function updateRestaurantRatingFinal(
-  restaurantUuid: string,
+  restaurantId: number,
   rating: number | null,
   ratingCount: number,
   client: DBClient = prisma
 ) {
-  return client.restaurant.update({
-    where: { uuid: restaurantUuid },
+  return client.restaurantStats.update({
+    where: {
+      restaurantId
+    },
     data: {
       rating,
-      ratingCount,
+      ratingCount
     },
     select: {
       rating: true,
       ratingCount: true,
-      reviewCount: true,
-    },
+      reviewCount: true
+    }
   })
 }
 // #endregion
@@ -324,14 +381,18 @@ export async function updateRestaurantRatingFinal(
 
 // #region 評論評分修改後更新餐廳的 ratingSum（用於計算最終 rating）
 export async function adjustRestaurantRatingSum(
-  restaurantUuid: string,
+  restaurantId: number,
   diff: number,
   client: DBClient = prisma
 ) {
-  return client.restaurant.update({
-    where: { uuid: restaurantUuid },
+  return client.restaurantStats.update({
+    where: {
+      restaurantId
+    },
     data: {
-      ratingSum: { increment: diff },
+      ratingSum: { 
+        increment: diff 
+      },
       // reviewCount 不變
     },
   })
