@@ -27,9 +27,6 @@ export interface RestaurantOwnerListItem {
   name: string
   nameEn: string | null
   category: string
-  rating: number | null
-  ratingCount: number
-  reviewCount: number
   coverImage: RestaurantImage | null
 
   displayStatus: RestaurantDisplayStatus

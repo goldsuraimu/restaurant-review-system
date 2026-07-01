@@ -105,20 +105,6 @@ export function toOwnerRestaurantListItem(
 
     category: target.category,
 
-    rating:
-      row.publishedRestaurant
-        ? formatNumber(
-          row.publishedRestaurant.rating,
-          1
-        )
-        : null,
-
-    ratingCount:
-      row.publishedRestaurant?.ratingCount ?? 0,
-
-    reviewCount:
-      row.publishedRestaurant?.reviewCount ?? 0,
-
     coverImage:
       cover
         ? {
