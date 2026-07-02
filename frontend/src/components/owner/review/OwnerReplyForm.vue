@@ -34,7 +34,9 @@
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue'
 
+import { normalizeMultilineText } from '@/utils/text'
 import { getFieldError } from '@/utils/form'
+
 import { useFormContext } from '@/composables/form/core/useFieldErrors'
 import { useBindFields } from '@/composables/form/core/useBindField'
 
@@ -61,7 +63,6 @@ const form = reactive({
 
 const isEditing = ref(!!props.initialContent)
 
-
 // 驗證
 const MAX_LENGTH = 500
 
@@ -71,7 +72,8 @@ const touched = reactive({
 })
 
 const isValidContent = computed(() => {
-  const len = form.content.trim().length
+  const normalized = normalizeMultilineText(form.content)
+  const len = normalized.length
   return len > 0 && len <= MAX_LENGTH
 })
 
@@ -81,7 +83,8 @@ const contentError = computed(() => {
 })
 
 const isUnchanged = computed(() =>
-  form.content.trim() === (props.initialContent ?? '').trim()
+  normalizeMultilineText(form.content) ===
+  normalizeMultilineText(props.initialContent)
 )
 
 // 如果外部 props.initialContent 改變，也更新 content
@@ -106,18 +109,21 @@ function handleSubmit() {
   // 前端驗證不通過就直接返回
   if (!isValidContent.value) return
 
-  const trimmed = form.content.trim()
+  const normalized = normalizeMultilineText(form.content)
 
   // 如果是編輯且沒有變更
-  if (isEditing.value && trimmed === props.initialContent?.trim()) {
+  if (
+    isEditing.value && 
+    normalized === normalizeMultilineText(props.initialContent)
+  ) {
     emit('cancel')
     return
   }
 
   if (isEditing.value) {
-    emit('edit', { content: trimmed })
+    emit('edit', { content: normalized })
   } else {
-    emit('submit', { content: trimmed })
+    emit('submit', { content: normalized })
   }
 }
 

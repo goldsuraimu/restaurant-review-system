@@ -1,4 +1,6 @@
 import { reactive, computed } from 'vue'
+
+import { normalizeMultilineText } from '@/utils/text'
 import { getFieldError } from '@/utils/form'
 
 import type { Ref } from 'vue'
@@ -72,6 +74,10 @@ export function useReviewForm(
     )
   })
 
+  function normalizeForm() {
+    form.content = normalizeMultilineText(form.content)
+  }
+
   function reset() {
     form.rating = 0
     form.content = ''
@@ -94,6 +100,9 @@ export function useReviewForm(
     contentError,
 
     isChanged,
+
+    normalizeForm,
+
     reset,
     buttonText
   }

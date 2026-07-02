@@ -170,6 +170,7 @@ const {
   ratingError,
   contentError,
   isChanged,
+  normalizeForm,
   reset,
   buttonText
 } = useReviewForm(
@@ -206,12 +207,14 @@ async function handleClick() {
   if (!isFormValid) return
   if (isEditing.value && !isChanged.value) return
 
+  normalizeForm()
+  
   // // 合併成payload
   const newFiles = getNewFiles()
 
   const payloadBase = {
     ...form,
-    content: form.content.trim()
+    content: form.content
   }
   
   if (isEditing.value) {

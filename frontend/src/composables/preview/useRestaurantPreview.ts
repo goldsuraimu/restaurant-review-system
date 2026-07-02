@@ -1,4 +1,7 @@
 import { ref, computed } from 'vue'
+
+import { normalizeMultilineText } from '@/utils/text'
+
 import type { ImageUI } from '@/types'
 import type { RestaurantFormFields } from '@/types/restaurant'
 
@@ -34,7 +37,7 @@ export function useRestaurantPreview(
       category: trim(form.category),
       location: trim(form.location),
       phone: trim(form.phone),
-      description: trim(form.description),
+      description: normalizeMultilineText(form.description),
       rating: null,
       galleryImages: displayGallery,
       menuImages: menuImages.map((img, i) => ({

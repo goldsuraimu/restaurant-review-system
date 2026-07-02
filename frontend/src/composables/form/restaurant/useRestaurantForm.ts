@@ -1,6 +1,7 @@
 import { reactive, computed } from 'vue'
 
 import { getFieldError } from '@/utils/form'
+import { normalizeMultilineText } from '@/utils/text'
 
 import type { 
   RestaurantFormFields, 
@@ -135,7 +136,10 @@ export function useRestaurantForm(
       category: trim(form.category),
       location: trim(form.location),
       phone: trim(form.phone) === '' ? undefined : trim(form.phone),
-      description: trim(form.description) === '' ? undefined : trim(form.description),
+      description:
+        normalizeMultilineText(form.description) === ''
+          ? undefined
+          : normalizeMultilineText(form.description),
     }
   }
 
@@ -144,7 +148,10 @@ export function useRestaurantForm(
     const getFieldPayload = (field: keyof RestaurantFormFields) => {
       if (!isFieldChanged(field)) return undefined
 
-      const current = trim(form[field])
+      const current =
+        field === 'description'
+          ? normalizeMultilineText(form.description)
+          : trim(form[field])
       return current === '' ? null : current
     }
 
