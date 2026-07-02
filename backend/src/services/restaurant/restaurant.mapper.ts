@@ -57,7 +57,7 @@ export function toPublicRestaurantListItemFromPrisma(
     name: row.name,
     nameEn: row.nameEn,
     category: row.category,
-    rating: formatNumber(row.stats?.rating ?? 0, 1),
+    rating: formatNumber(row.stats?.rating ?? null, 1),
     ratingCount: row.stats?.ratingCount ?? 0,
     reviewCount: row.stats?.reviewCount ?? 0,
     coverImage: cover

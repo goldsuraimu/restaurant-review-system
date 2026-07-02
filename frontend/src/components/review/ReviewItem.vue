@@ -21,7 +21,16 @@
     </div>
 
     <!-- 評論內容 -->
-    <p class="text-content">{{ review.content }}</p>
+    <p ref="contentRef" class="text-content" :class="{ collapsed: !expanded }">
+      {{ review.content }}
+    </p>
+
+    <div class="mt-2">
+     <button v-if="showMore" class="btn btn-text-toggle btn-sm p-0" @click="expanded = !expanded">
+        {{ expanded ? '收合' : '查看更多' }}
+      </button>
+    </div>
+
     <div>
       <!-- 縮圖 -->
       <ImageThumbnailGrid :images="review.images" @open="i => open(i)" />
@@ -36,7 +45,15 @@
           :updatedAt="review.reply.updatedAt" 
         />
       </small>
-      <p class="text-content mt-2">{{ review.reply.content }}</p>
+    
+      <p ref="replyRef" class="text-content mt-2" :class="{ collapsed: !replyExpanded }">
+        {{ review.reply.content }}
+      </p>
+
+      <button v-if="showReplyMore" class="btn btn-text-toggle btn-sm p-0" @click="replyExpanded = !replyExpanded">
+        {{ replyExpanded ? '收合' : '查看更多' }}
+      </button>
+    
     </div>
   </div>
 
@@ -44,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import ImageThumbnailGrid from '@/components/common/ImageThumbnailGrid.vue'
@@ -70,6 +87,56 @@ const { authUser, isAuthenticated } = storeToRefs(authStore)
 
 const displayName = computed(() => props.review.nickname || props.review.userName)
 
+// 判斷是否需要顯示「查看更多」按鈕
+const contentRef = ref<HTMLElement>()
+const replyRef = ref<HTMLElement>()
+
+const expanded = ref(false)
+const replyExpanded = ref(false)
+
+const showMore = ref(false)
+const showReplyMore = ref(false)
+
+// 拆分檢查邏輯，避免互相干擾
+async function checkContentOverflow() {
+  if (!expanded.value && contentRef.value) {
+    showMore.value = contentRef.value.scrollHeight > contentRef.value.clientHeight
+  }
+}
+
+async function checkReplyOverflow() {
+  if (!replyExpanded.value && replyRef.value) {
+    showReplyMore.value = replyRef.value.scrollHeight > replyRef.value.clientHeight
+  }
+
+}
+
+async function checkOverflow() {
+  await nextTick()
+  checkContentOverflow()
+  checkReplyOverflow()
+}
+
+
+onMounted(checkOverflow)
+
+watch(
+  () => props.review.content,
+  async () => {
+    expanded.value = false // 先強制把展開狀態重設為關閉（文字縮回 4 行）
+    await nextTick()       // 等 Vue 把縮回後的畫面畫好
+    checkContentOverflow() // 重新精準量測高度，少於 4 行按鈕就會消失
+  }
+)
+
+watch(
+  () => props.review.reply?.content,
+  async () => {
+    replyExpanded.value = false
+    await nextTick()
+    checkReplyOverflow()
+  }
+)
 
 function handleDelete() {
   emit('review-deleted', props.review)
@@ -108,4 +175,27 @@ function open(i: number) {
   color: #9e9e9e;
   font-size: 0.75rem;
 }
+
+.btn-text-toggle {
+  color: #5a626a;
+  background: transparent;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-text-toggle:hover {
+  color: #1a1a1a;
+  text-decoration: underline;
+}
+
+.collapsed {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
+}
+
 </style>

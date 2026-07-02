@@ -97,7 +97,7 @@ flowchart LR
 
 本系統採用 Prisma ORM + PostgreSQL。
 
-![ERD](https://res.cloudinary.com/dl3krnjnd/image/upload/f_auto,q_auto/v1782373204/database_ERD.png)
+![ERD](https://res.cloudinary.com/dl3krnjnd/image/upload/f_auto,q_auto/v1782969791/database_ERD.png)
 
 ---
 

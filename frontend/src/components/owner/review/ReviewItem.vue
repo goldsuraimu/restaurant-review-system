@@ -11,7 +11,18 @@
         <ReviewStars :rating="review.rating" />
       </div>
 
-      <p class="text-content">{{ review.content }}</p>
+      <!-- <p class="text-content">{{ review.content }}</p> -->
+      <p ref="contentRef" class="text-content" :class="{ collapsed: !expanded }">
+        {{ review.content }}
+      </p>
+
+      <button 
+        v-if="showMore" 
+        class="btn btn-text-toggle btn-sm p-0" 
+        @click="expanded = !expanded"
+      >
+        {{ expanded ? '收合' : '查看更多' }}
+      </button>
 
       <!-- 縮圖 -->
       <div>
@@ -22,27 +33,49 @@
       />
       </div>
 
-      <RelativeTime 
-        :createdAt="review.createdAt" 
-        :updatedAt="review.updatedAt" 
-        color="#5A2B00" 
-        editedColor="#9E5C40"
-        mode="absolute" 
-        />
+      <div class="mt-2">
+        <RelativeTime 
+          :createdAt="review.createdAt" 
+          :updatedAt="review.updatedAt" 
+          color="#5A2B00" 
+          editedColor="#9E5C40"
+          mode="absolute" 
+          />
+      </div>
     </div>
 
     <!-- 已回覆 -->
-    <div v-if="review.reply && mode !== 'preview' && activeEditReviewUuid !== review.uuid" class="owner-reply">
+    <div 
+      v-if="review.reply && mode !== 'preview'"
+      v-show="activeEditReviewUuid !== review.uuid" 
+      class="owner-reply"
+    >
       <strong>{{ review.restaurantName }}（店家）：</strong>
-      <p class="text-content">{{ review.reply.content }}</p>
-      
-      <RelativeTime 
-        :createdAt="review.reply.createdAt" 
-        :updatedAt="review.reply.updatedAt" 
-        color="#5A2B00"
-        editedColor="#9E5C40" 
-        mode="absolute" 
-      />
+
+      <p 
+        ref="replyRef" 
+        class="text-content mt-2" 
+        :class="{ collapsed: !replyExpanded }"
+      >
+        {{ review.reply.content }}
+      </p>
+
+      <button 
+        v-if="showReplyMore" 
+        class="btn btn-text-toggle btn-sm p-0" 
+        @click="replyExpanded = !replyExpanded"
+      >
+        {{ replyExpanded ? '收合' : '查看更多' }}
+      </button>
+      <div class="mt-2">
+        <RelativeTime 
+          :createdAt="review.reply.createdAt" 
+          :updatedAt="review.reply.updatedAt" 
+          color="#5A2B00"
+          editedColor="#9E5C40" 
+          mode="absolute" 
+        />
+      </div>
     </div>
 
     <!-- MODE: LIST / MANAGE (REPLY ACTIONS) -->
@@ -94,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 import OwnerReplyForm from '@/components/owner/review/OwnerReplyForm.vue'
 import ReviewStars from '@/components/review/ReviewStars.vue'
@@ -134,6 +167,61 @@ const emit = defineEmits<{
   (e: 'delete-reply', reviewUuid: string): void
   (e: 'open-lightbox', images: ReviewImage[], index: number): void
 }>()
+
+
+// 判斷是否需要顯示「查看更多」按鈕
+const contentRef = ref<HTMLElement>()
+const replyRef = ref<HTMLElement>()
+
+const expanded = ref(false)
+const replyExpanded = ref(false)
+
+const showMore = ref(false)
+const showReplyMore = ref(false)
+
+// 拆分檢查邏輯，避免互相干擾
+async function checkContentOverflow() {
+  if (!expanded.value && contentRef.value) {
+    showMore.value = contentRef.value.scrollHeight > contentRef.value.clientHeight
+  }
+}
+
+async function checkReplyOverflow() {
+  // 在下一個影格渲染前執行這段
+  // 因為v-show會在下一個影格才會把元素顯示出來，這樣才能正確量測高度
+  requestAnimationFrame(() => {
+    if (!replyExpanded.value && replyRef.value) {
+      showReplyMore.value = replyRef.value.scrollHeight > replyRef.value.clientHeight
+    }
+  })
+}
+
+async function checkOverflow() {
+  await nextTick()
+  checkContentOverflow()
+  checkReplyOverflow()
+}
+
+
+onMounted(checkOverflow)
+
+watch(
+  () => props.review.content,
+  async () => {
+    expanded.value = false // 先強制把展開狀態重設為關閉（文字縮回 4 行）
+    await nextTick()       // 等 Vue 把縮回後的畫面畫好
+    checkContentOverflow() // 重新精準量測高度，少於 4 行按鈕就會消失
+  }
+)
+
+watch(
+  () => props.review.reply?.content,
+  async () => {
+    replyExpanded.value = false
+    await nextTick()
+    checkReplyOverflow()
+  }
+)
 
 const isClickable = computed(() => props.mode !== 'preview')
 
@@ -296,5 +384,27 @@ function openLightbox(i: number) {
 .no-review p {
   font-size: 1rem;
   color: #842B00;
+}
+
+.btn-text-toggle {
+  color: #9E5C40;
+  background: transparent;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.btn-text-toggle:hover {
+  color: #FF7A45;
+  text-decoration: underline;
+}
+
+.collapsed {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
 }
 </style>
