@@ -48,12 +48,23 @@ export async function findSimpleList({
   const orderBy: Prisma.RestaurantOrderByWithRelationInput[] = []
 
   if (sortColumn === 'createdAt') {
-    orderBy.push({ createdAt: sortOrder })
+    orderBy.push({
+      createdAt: sortOrder,
+    })
+  } else if (sortColumn === 'rating') {
+    orderBy.push({
+      stats: {
+        rating: {
+          sort: sortOrder,
+          nulls: 'last',
+        },
+      },
+    })
   } else {
     orderBy.push({
       stats: {
-        [sortColumn]: sortOrder
-      }
+        [sortColumn]: sortOrder,
+      },
     })
   }
 

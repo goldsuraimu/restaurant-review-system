@@ -124,17 +124,8 @@ watch(
   () => props.review.content,
   async () => {
     expanded.value = false // 先強制把展開狀態重設為關閉（文字縮回 4 行）
-    await nextTick()       // 等 Vue 把縮回後的畫面畫好
-    checkContentOverflow() // 重新精準量測高度，少於 4 行按鈕就會消失
-  }
-)
-
-watch(
-  () => props.review.reply?.content,
-  async () => {
-    replyExpanded.value = false
     await nextTick()
-    checkReplyOverflow()
+    checkContentOverflow()
   }
 )
 

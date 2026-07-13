@@ -52,7 +52,7 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth';
@@ -88,7 +88,7 @@ onMounted(() => {
   window.addEventListener('resize', handleResize)
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
 })
 

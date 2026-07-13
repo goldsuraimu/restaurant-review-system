@@ -11,7 +11,6 @@
         <ReviewStars :rating="review.rating" />
       </div>
 
-      <!-- <p class="text-content">{{ review.content }}</p> -->
       <p ref="contentRef" class="text-content" :class="{ collapsed: !expanded }">
         {{ review.content }}
       </p>
@@ -46,8 +45,9 @@
 
     <!-- 已回覆 -->
     <div 
-      v-if="review.reply && mode !== 'preview'"
-      v-show="activeEditReviewUuid !== review.uuid" 
+      v-if="review.reply 
+        && mode !== 'preview' 
+        && activeEditReviewUuid !== review.uuid"
       class="owner-reply"
     >
       <strong>{{ review.restaurantName }}（店家）：</strong>
@@ -188,7 +188,7 @@ async function checkContentOverflow() {
 
 async function checkReplyOverflow() {
   // 在下一個影格渲染前執行這段
-  // 因為v-show會在下一個影格才會把元素顯示出來，這樣才能正確量測高度
+  // 因為v-if會在下一個影格才會把元素顯示出來，這樣才能正確量測高度
   requestAnimationFrame(() => {
     if (!replyExpanded.value && replyRef.value) {
       showReplyMore.value = replyRef.value.scrollHeight > replyRef.value.clientHeight
@@ -206,19 +206,15 @@ async function checkOverflow() {
 onMounted(checkOverflow)
 
 watch(
-  () => props.review.content,
-  async () => {
-    expanded.value = false // 先強制把展開狀態重設為關閉（文字縮回 4 行）
-    await nextTick()       // 等 Vue 把縮回後的畫面畫好
-    checkContentOverflow() // 重新精準量測高度，少於 4 行按鈕就會消失
-  }
-)
-
-watch(
   () => props.review.reply?.content,
   async () => {
-    replyExpanded.value = false
-    await nextTick()
+    replyExpanded.value = false  // 先強制把展開狀態重設為關閉（文字縮回 4 行）
+
+    await nextTick()             // 不加也可以，因為後續有 requestAnimationFrame()，
+                                 // nextTick() 只能確保 DOM tree 更新完成，
+                                 // 但不保證元素的尺寸已經更新完成，
+                                 // 所以在v-if顯示的情況下還是要用 requestAnimationFrame()
+                                 // 去確保元素尺寸已經更新完成
     checkReplyOverflow()
   }
 )

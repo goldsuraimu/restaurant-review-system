@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onUnmounted, unref } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, unref } from 'vue'
 import type { Ref } from 'vue';
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
@@ -38,7 +38,7 @@ export function useTimestamps(
       now.value = Date.now()
     }, 60 * 1000)
   })
-  onUnmounted(() => {
+  onBeforeUnmount(() => {
     if (timer) clearInterval(timer)
   })
 
